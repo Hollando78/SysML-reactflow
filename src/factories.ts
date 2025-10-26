@@ -1,6 +1,7 @@
 import type { XYPosition } from 'reactflow';
 
 import type {
+  SysMLActivityControlSpec,
   SysMLActivitySpec,
   SysMLBlockSpec,
   SysMLEdgeData,
@@ -168,6 +169,27 @@ export const createParametricNode = (
         }))
       }
     ]
+  }
+});
+
+export const createActivityControlNode = (
+  spec: SysMLActivityControlSpec,
+  position?: Partial<XYPosition>
+): SysMLReactFlowNode => ({
+  id: spec.id,
+  type: 'sysml.activity-control',
+  position: normalizePosition(position),
+  data: {
+    ...withBaseData(
+      {
+        id: spec.id,
+        name: spec.name,
+        stereotype: spec.controlType,
+        description: spec.documentation
+      },
+      'activity-control'
+    ),
+    controlType: spec.controlType
   }
 });
 
@@ -341,6 +363,8 @@ export const createNodesFromSpecs = (
         return createActivityNode(descriptor.spec, position);
       case 'parametric':
         return createParametricNode(descriptor.spec, position);
+      case 'activity-control':
+        return createActivityControlNode(descriptor.spec, position);
       case 'internal-block':
         return createBlockNode(descriptor.spec, position, 'internal-block');
       case 'use-case':

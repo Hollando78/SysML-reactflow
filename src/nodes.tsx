@@ -13,7 +13,8 @@ const accentByKind: Record<string, string> = {
   'use-case': '#FFB000',
   state: '#33B1FF',
   'state-machine': '#3DDBD9',
-  'sequence-lifeline': '#F1C21B'
+  'sequence-lifeline': '#F1C21B',
+  'activity-control': '#E0E0E0'
 };
 
 const statusColor: Record<NonNullable<SysMLNodeData['status']>, string> = {
@@ -340,6 +341,44 @@ const SequenceLifelineNode = memo((props: NodeProps<SysMLNodeData>) => {
   );
 });
 
+const ActivityControlNode = memo((props: NodeProps<SysMLNodeData>) => {
+  const { data } = props;
+  const type = data.controlType ?? 'decision';
+  const accent = accentByKind['activity-control'];
+  const isBar = type === 'fork' || type === 'join';
+
+  return (
+    <>
+      {isBar ? (
+        <div
+          style={{
+            width: 160,
+            height: 12,
+            background: accent,
+            borderRadius: 3,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.45)'
+          }}
+        />
+      ) : (
+        <div
+          style={{
+            width: 120,
+            height: 120,
+            transform: 'rotate(45deg)',
+            background: '#0b0c0f',
+            border: `4px solid ${accent}`,
+            boxShadow: '0 4px 12px rgba(0,0,0,0.45)'
+          }}
+        />
+      )}
+      <Handle type="target" position={Position.Left} />
+      <Handle type="source" position={Position.Right} />
+      <Handle type="target" position={Position.Top} />
+      <Handle type="source" position={Position.Bottom} />
+    </>
+  );
+});
+
 export const sysmlNodeTypes: NodeTypes = {
   'sysml.requirement': RequirementNode,
   'sysml.block': BlockNode,
@@ -349,5 +388,6 @@ export const sysmlNodeTypes: NodeTypes = {
   'sysml.use-case': UseCaseNode,
   'sysml.state': StateNode,
   'sysml.state-machine': StateMachineNode,
-  'sysml.sequence-lifeline': SequenceLifelineNode
+  'sysml.sequence-lifeline': SequenceLifelineNode,
+  'sysml.activity-control': ActivityControlNode
 };

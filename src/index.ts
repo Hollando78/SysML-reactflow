@@ -5,6 +5,7 @@ export {
   createRequirementNode,
   createBlockNode,
   createActivityNode,
+  createActivityControlNode,
   createParametricNode,
   createUseCaseNode,
   createStateNode,
@@ -18,6 +19,7 @@ export {
 } from './factories';
 export type {
   SysMLActivitySpec,
+  SysMLActivityControlSpec,
   SysMLBlockSpec,
   SysMLEdgeData,
   SysMLEdgeKind,

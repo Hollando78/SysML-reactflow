@@ -13,7 +13,8 @@ const edgeColors: Record<string, string> = {
   include: '#be95ff',
   extend: '#ff7eb6',
   transition: '#33b1ff',
-  message: '#f1c21b'
+  message: '#f1c21b',
+  'control-flow': '#6fdc8c'
 };
 
 const SysMLEdgeComponent = memo((props: EdgeProps<SysMLEdgeData>) => {

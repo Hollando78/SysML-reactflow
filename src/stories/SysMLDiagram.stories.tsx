@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 
 import {
   SysMLDiagram,
+  createActivityControlNode,
   createActivityNode,
   createBlockNode,
   createEdgesFromRelationships,
@@ -354,6 +355,94 @@ const sequenceGraph = (() => {
 
   return { nodes: [controller, pcm, load], edges };
 })();
+
+const activityGraph = (() => {
+  const init = createActivityNode(
+    {
+      id: 'ACT-Init',
+      name: 'Initialize',
+      actions: ['Boot subsystems'],
+      outputs: [{ name: 'ready', type: 'Signal' }]
+    },
+    { x: -100, y: 0 }
+  );
+
+  const fork = createActivityControlNode(
+    { id: 'ACT-Fork', name: 'Fork', controlType: 'fork' },
+    { x: 180, y: 40 }
+  );
+
+  const configure = createActivityNode(
+    {
+      id: 'ACT-Config',
+      name: 'Configure Loads',
+      actions: ['Resolve priorities'],
+      inputs: [{ name: 'ready', type: 'Signal' }]
+    },
+    { x: 380, y: -80 }
+  );
+
+  const monitor = createActivityNode(
+    {
+      id: 'ACT-Monitor',
+      name: 'Monitor Current',
+      actions: ['Sample sensors'],
+      outputs: [{ name: 'currents', type: 'Telemetry' }]
+    },
+    { x: 380, y: 120 }
+  );
+
+  const decision = createActivityControlNode(
+    { id: 'ACT-Decision', name: 'Decision', controlType: 'decision' },
+    { x: 620, y: 40 }
+  );
+
+  const recover = createActivityNode(
+    {
+      id: 'ACT-Recover',
+      name: 'Recover Fault',
+      actions: ['Isolate branch', 'Notify ground']
+    },
+    { x: 860, y: 180 }
+  );
+
+  const merge = createActivityControlNode(
+    { id: 'ACT-Merge', name: 'Merge', controlType: 'merge' },
+    { x: 860, y: 0 }
+  );
+
+  const join = createActivityControlNode(
+    { id: 'ACT-Join', name: 'Join', controlType: 'join' },
+    { x: 1080, y: 40 }
+  );
+
+  const shutdown = createActivityNode(
+    {
+      id: 'ACT-Shutdown',
+      name: 'Shutdown',
+      actions: ['Deactivate loads']
+    },
+    { x: 1280, y: 40 }
+  );
+
+  const edges = createEdgesFromRelationships([
+    { id: 'cf-1', type: 'control-flow', source: 'ACT-Init', target: 'ACT-Fork', label: 'ready' },
+    { id: 'cf-2', type: 'control-flow', source: 'ACT-Fork', target: 'ACT-Config' },
+    { id: 'cf-3', type: 'control-flow', source: 'ACT-Fork', target: 'ACT-Monitor' },
+    { id: 'cf-4', type: 'control-flow', source: 'ACT-Config', target: 'ACT-Decision' },
+    { id: 'cf-5', type: 'control-flow', source: 'ACT-Monitor', target: 'ACT-Decision' },
+    { id: 'cf-6', type: 'control-flow', source: 'ACT-Decision', target: 'ACT-Recover', label: 'fault' },
+    { id: 'cf-7', type: 'control-flow', source: 'ACT-Decision', target: 'ACT-Merge', label: 'nominal' },
+    { id: 'cf-8', type: 'control-flow', source: 'ACT-Recover', target: 'ACT-Join' },
+    { id: 'cf-9', type: 'control-flow', source: 'ACT-Merge', target: 'ACT-Join' },
+    { id: 'cf-10', type: 'control-flow', source: 'ACT-Join', target: 'ACT-Shutdown' }
+  ]);
+
+  return {
+    nodes: [init, fork, configure, monitor, decision, recover, merge, join, shutdown],
+    edges
+  };
+})();
 const meta = {
   title: 'SysML/SysMLDiagram',
   component: SysMLDiagram,
@@ -424,6 +513,15 @@ export const SequenceDiagram: Story = {
   parameters: {
     docs: {
       description: { story: 'Lifelines connected by synchronous and asynchronous message edges.' }
+    }
+  }
+};
+
+export const ActivityDiagram: Story = {
+  args: activityGraph,
+  parameters: {
+    docs: {
+      description: { story: 'Activity nodes connected with fork/join/decision/merge control nodes.' }
     }
   }
 };

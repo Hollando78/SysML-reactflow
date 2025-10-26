@@ -9,7 +9,8 @@ export type SysMLNodeKind =
   | 'use-case'
   | 'state'
   | 'state-machine'
-  | 'sequence-lifeline';
+  | 'sequence-lifeline'
+  | 'activity-control';
 
 export type SysMLEdgeKind =
   | 'dependency'
@@ -20,7 +21,8 @@ export type SysMLEdgeKind =
   | 'include'
   | 'extend'
   | 'transition'
-  | 'message';
+  | 'message'
+  | 'control-flow';
 
 export interface SysMLTag {
   key: string;
@@ -48,6 +50,7 @@ export interface SysMLNodeData {
   compartments?: SysMLCompartment[];
   status?: 'draft' | 'reviewed' | 'approved' | 'deprecated';
   emphasis?: string;
+  controlType?: 'fork' | 'join' | 'decision' | 'merge';
 }
 
 export interface SysMLRequirementSpec {
@@ -101,6 +104,13 @@ export interface SysMLParametricSpec {
   stereotype?: string;
   equation: string;
   parameters: SysMLPropertySpec[];
+}
+
+export interface SysMLActivityControlSpec {
+  id: string;
+  name: string;
+  controlType: 'fork' | 'join' | 'decision' | 'merge';
+  documentation?: string;
 }
 
 export interface SysMLUseCaseSpec {
@@ -176,7 +186,8 @@ export type SysMLNodeSpec =
   | { kind: 'use-case'; spec: SysMLUseCaseSpec }
   | { kind: 'state'; spec: SysMLStateSpec }
   | { kind: 'state-machine'; spec: SysMLStateMachineSpec }
-  | { kind: 'sequence-lifeline'; spec: SysMLSequenceLifelineSpec };
+  | { kind: 'sequence-lifeline'; spec: SysMLSequenceLifelineSpec }
+  | { kind: 'activity-control'; spec: SysMLActivityControlSpec };
 
 export type SysMLReactFlowNode = Node<SysMLNodeData>;
 export type SysMLReactFlowEdge = Edge<SysMLEdgeData>;

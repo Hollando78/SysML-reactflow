@@ -15,6 +15,7 @@ SysML-ready building blocks for [React Flow](https://reactflow.dev). The package
 - **Use case:** Elliptical nodes with include/extend links and actor tagging.
 - **State machines:** State + state-machine nodes, transition edges with triggers/guards/effects.
 - **Sequence:** Lifeline nodes with synchronous/asynchronous/return message edges.
+- **Activity:** Action nodes, fork/join bars, decision/merge diamonds, and control-flow edges.
 
 ## Installation
 
