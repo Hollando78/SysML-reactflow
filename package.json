@@ -1,0 +1,54 @@
+{
+  "name": "sysml-reactflow",
+  "version": "0.1.0",
+  "description": "Reusable React Flow building blocks for OMG-compliant SysML diagrams.",
+  "type": "module",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch --dts",
+    "lint": "tsc --noEmit",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
+  },
+  "keywords": [
+    "sysml",
+    "reactflow",
+    "omg",
+    "diagrams"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "reactflow": "^11.11.4",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.3",
+    "storybook": "^9.1.15",
+    "@storybook/react-vite": "^9.1.15",
+    "@chromatic-com/storybook": "^4.1.1",
+    "@storybook/addon-docs": "^9.1.15",
+    "@storybook/addon-onboarding": "^9.1.15",
+    "@storybook/addon-a11y": "^9.1.15",
+    "@storybook/addon-vitest": "^9.1.15"
+  },
+  "peerDependencies": {
+    "react": "^18.2.0 || ^19.0.0",
+    "react-dom": "^18.2.0 || ^19.0.0",
+    "reactflow": "^11.11.0"
+  }
+}
