@@ -9,6 +9,13 @@ SysML-ready building blocks for [React Flow](https://reactflow.dev). The package
 - 🛠️ Data factories that transform SysML specifications into strongly typed React Flow nodes/edges.
 - 🗺️ `SysMLDiagram` wrapper that wires recommended controls, minimap, and background for quick prototyping.
 
+### Diagram coverage
+
+- **BDD & IBD:** Block/part/value/port compartments plus allocation edges.
+- **Use case:** Elliptical nodes with include/extend links and actor tagging.
+- **State machines:** State + state-machine nodes, transition edges with triggers/guards/effects.
+- **Sequence:** Lifeline nodes with synchronous/asynchronous/return message edges.
+
 ## Installation
 
 ```bash

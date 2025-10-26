@@ -6,7 +6,13 @@ export {
   createBlockNode,
   createActivityNode,
   createParametricNode,
+  createUseCaseNode,
+  createStateNode,
+  createStateMachineNode,
+  createSequenceLifelineNode,
   createRelationshipEdge,
+  createStateTransitionEdge,
+  createSequenceMessageEdge,
   createNodesFromSpecs,
   createEdgesFromRelationships
 } from './factories';
@@ -19,8 +25,14 @@ export type {
   SysMLNodeKind,
   SysMLNodeSpec,
   SysMLParametricSpec,
+  SysMLUseCaseSpec,
+  SysMLStateSpec,
+  SysMLStateMachineSpec,
+  SysMLSequenceLifelineSpec,
+  SysMLSequenceMessageSpec,
   SysMLReactFlowEdge,
   SysMLReactFlowNode,
   SysMLRelationshipSpec,
+  SysMLStateTransitionSpec,
   SysMLRequirementSpec
 } from './types';

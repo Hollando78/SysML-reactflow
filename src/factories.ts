@@ -2,6 +2,7 @@ import type { XYPosition } from 'reactflow';
 
 import type {
   SysMLActivitySpec,
+  SysMLBlockSpec,
   SysMLEdgeData,
   SysMLNodeData,
   SysMLNodeKind,
@@ -11,7 +12,12 @@ import type {
   SysMLReactFlowNode,
   SysMLRelationshipSpec,
   SysMLRequirementSpec,
-  SysMLBlockSpec
+  SysMLSequenceLifelineSpec,
+  SysMLSequenceMessageSpec,
+  SysMLStateMachineSpec,
+  SysMLStateSpec,
+  SysMLStateTransitionSpec,
+  SysMLUseCaseSpec
 } from './types';
 
 const defaultPosition: XYPosition = { x: 0, y: 0 };
@@ -165,12 +171,159 @@ export const createParametricNode = (
   }
 });
 
+export const createUseCaseNode = (
+  spec: SysMLUseCaseSpec,
+  position?: Partial<XYPosition>
+): SysMLReactFlowNode => ({
+  id: spec.id,
+  type: 'sysml.use-case',
+  position: normalizePosition(position),
+  data: {
+    ...withBaseData(
+      { id: spec.id, name: spec.name, stereotype: spec.stereotype, description: spec.description },
+      'use-case'
+    ),
+    status: spec.status,
+    tags: spec.actors?.map((actor) => ({ key: 'actor', value: actor })),
+    compartments: [
+      spec.includes &&
+        spec.includes.length > 0 && {
+          title: 'includes',
+          items: spec.includes.map((uc) => ({ label: uc }))
+        },
+      spec.extends &&
+        spec.extends.length > 0 && {
+          title: 'extends',
+          items: spec.extends.map((uc) => ({ label: uc }))
+        }
+    ].filter(Boolean) as SysMLNodeData['compartments']
+  }
+});
+
+export const createStateNode = (
+  spec: SysMLStateSpec,
+  position?: Partial<XYPosition>
+): SysMLReactFlowNode => ({
+  id: spec.id,
+  type: 'sysml.state',
+  position: normalizePosition(position),
+  data: {
+    ...withBaseData(
+      {
+        id: spec.id,
+        name: spec.name,
+        stereotype: 'state',
+        description: undefined
+      },
+      'state'
+    ),
+    status: spec.status,
+    compartments: [
+      spec.entryAction && {
+        title: 'entry',
+        items: [{ label: spec.entryAction }]
+      },
+      spec.doActivity && {
+        title: 'do',
+        items: [{ label: spec.doActivity }]
+      },
+      spec.exitAction && {
+        title: 'exit',
+        items: [{ label: spec.exitAction }]
+      }
+    ].filter(Boolean) as SysMLNodeData['compartments']
+  }
+});
+
+export const createStateMachineNode = (
+  spec: SysMLStateMachineSpec,
+  position?: Partial<XYPosition>
+): SysMLReactFlowNode => ({
+  id: spec.id,
+  type: 'sysml.state-machine',
+  position: normalizePosition(position),
+  data: {
+    ...withBaseData(
+      {
+        id: spec.id,
+        name: spec.name,
+        stereotype: spec.stereotype ?? 'stateMachine',
+        description: undefined
+      },
+      'state-machine'
+    ),
+    compartments: [
+      {
+        title: 'states',
+        items: spec.states.map((state) => ({ label: state.name }))
+      }
+    ]
+  }
+});
+
+export const createSequenceLifelineNode = (
+  spec: SysMLSequenceLifelineSpec,
+  position?: Partial<XYPosition>
+): SysMLReactFlowNode => ({
+  id: spec.id,
+  type: 'sysml.sequence-lifeline',
+  position: normalizePosition(position),
+  data: {
+    ...withBaseData(
+      {
+        id: spec.id,
+        name: spec.name,
+        stereotype: spec.stereotype ?? 'lifeline',
+        description: spec.classifier
+      },
+      'sequence-lifeline'
+    )
+  }
+});
+
+export const createStateTransitionEdge = (
+  transition: SysMLStateTransitionSpec
+): SysMLReactFlowEdge => ({
+  id: transition.id,
+  type: 'sysml.relationship',
+  source: transition.source,
+  target: transition.target,
+  data: {
+    kind: 'transition',
+    label: transition.trigger ?? transition.id,
+    guard: transition.guard,
+    effect: transition.effect
+  }
+});
+
+export const createSequenceMessageEdge = (
+  message: SysMLSequenceMessageSpec
+): SysMLReactFlowEdge => ({
+  id: message.id,
+  type: 'sysml.relationship',
+  source: message.source,
+  target: message.target,
+  data: {
+    kind: 'message',
+    label: message.label,
+    guard: message.guard,
+    trigger: message.type
+  }
+});
+
 export const createRelationshipEdge = (spec: SysMLRelationshipSpec): SysMLReactFlowEdge => ({
   id: spec.id,
   type: 'sysml.relationship',
   source: spec.source,
   target: spec.target,
-  data: { kind: spec.type, label: spec.label, rationale: spec.rationale } satisfies SysMLEdgeData
+  data: {
+    kind: spec.type,
+    label: spec.label,
+    rationale: spec.rationale,
+    trigger: spec.trigger,
+    guard: spec.guard,
+    effect: spec.effect
+  } satisfies SysMLEdgeData
 });
 
 export const createNodesFromSpecs = (
@@ -190,6 +343,14 @@ export const createNodesFromSpecs = (
         return createParametricNode(descriptor.spec, position);
       case 'internal-block':
         return createBlockNode(descriptor.spec, position, 'internal-block');
+      case 'use-case':
+        return createUseCaseNode(descriptor.spec, position);
+      case 'state':
+        return createStateNode(descriptor.spec, position);
+      case 'state-machine':
+        return createStateMachineNode(descriptor.spec, position);
+      case 'sequence-lifeline':
+        return createSequenceLifelineNode(descriptor.spec, position);
       case 'block-definition':
       default:
         return createBlockNode(descriptor.spec as SysMLBlockSpec, position, 'block-definition');

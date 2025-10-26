@@ -5,9 +5,22 @@ export type SysMLNodeKind =
   | 'internal-block'
   | 'requirement'
   | 'activity'
-  | 'parametric';
+  | 'parametric'
+  | 'use-case'
+  | 'state'
+  | 'state-machine'
+  | 'sequence-lifeline';
 
-export type SysMLEdgeKind = 'dependency' | 'satisfy' | 'verify' | 'allocate' | 'refine';
+export type SysMLEdgeKind =
+  | 'dependency'
+  | 'satisfy'
+  | 'verify'
+  | 'allocate'
+  | 'refine'
+  | 'include'
+  | 'extend'
+  | 'transition'
+  | 'message';
 
 export interface SysMLTag {
   key: string;
@@ -90,6 +103,58 @@ export interface SysMLParametricSpec {
   parameters: SysMLPropertySpec[];
 }
 
+export interface SysMLUseCaseSpec {
+  id: string;
+  name: string;
+  stereotype?: string;
+  description?: string;
+  actors?: string[];
+  includes?: string[];
+  extends?: string[];
+  status?: 'draft' | 'reviewed' | 'approved' | 'deprecated';
+}
+
+export interface SysMLStateSpec {
+  id: string;
+  name: string;
+  entryAction?: string;
+  exitAction?: string;
+  doActivity?: string;
+  status?: 'draft' | 'reviewed' | 'approved' | 'deprecated';
+}
+
+export interface SysMLStateMachineSpec {
+  id: string;
+  name: string;
+  stereotype?: string;
+  states: SysMLStateSpec[];
+}
+
+export interface SysMLStateTransitionSpec {
+  id: string;
+  source: string;
+  target: string;
+  trigger?: string;
+  guard?: string;
+  effect?: string;
+}
+
+export interface SysMLSequenceLifelineSpec {
+  id: string;
+  name: string;
+  classifier?: string;
+  stereotype?: string;
+}
+
+export interface SysMLSequenceMessageSpec {
+  id: string;
+  type: 'sync' | 'async' | 'return';
+  source: string;
+  target: string;
+  label: string;
+  guard?: string;
+}
+
 export interface SysMLRelationshipSpec {
   id: string;
   type: SysMLEdgeKind;
@@ -97,6 +162,9 @@ export interface SysMLRelationshipSpec {
   target: string;
   label?: string;
   rationale?: string;
+  trigger?: string;
+  guard?: string;
+  effect?: string;
 }
 
 export type SysMLNodeSpec =
@@ -104,7 +172,11 @@ export type SysMLNodeSpec =
   | { kind: 'block-definition'; spec: SysMLBlockSpec }
   | { kind: 'internal-block'; spec: SysMLBlockSpec }
   | { kind: 'activity'; spec: SysMLActivitySpec }
-  | { kind: 'parametric'; spec: SysMLParametricSpec };
+  | { kind: 'parametric'; spec: SysMLParametricSpec }
+  | { kind: 'use-case'; spec: SysMLUseCaseSpec }
+  | { kind: 'state'; spec: SysMLStateSpec }
+  | { kind: 'state-machine'; spec: SysMLStateMachineSpec }
+  | { kind: 'sequence-lifeline'; spec: SysMLSequenceLifelineSpec };
 
 export type SysMLReactFlowNode = Node<SysMLNodeData>;
 export type SysMLReactFlowEdge = Edge<SysMLEdgeData>;
@@ -113,4 +185,7 @@ export interface SysMLEdgeData {
   kind: SysMLEdgeKind;
   label?: string;
   rationale?: string;
+  trigger?: string;
+  guard?: string;
+  effect?: string;
 }

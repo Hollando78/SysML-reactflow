@@ -9,7 +9,11 @@ const edgeColors: Record<string, string> = {
   satisfy: '#0f62fe',
   verify: '#24a148',
   allocate: '#ee5396',
-  refine: '#ff832b'
+  refine: '#ff832b',
+  include: '#be95ff',
+  extend: '#ff7eb6',
+  transition: '#33b1ff',
+  message: '#f1c21b'
 };
 
 const SysMLEdgeComponent = memo((props: EdgeProps<SysMLEdgeData>) => {
@@ -41,7 +45,11 @@ const SysMLEdgeComponent = memo((props: EdgeProps<SysMLEdgeData>) => {
               border: `1px solid ${color}`
             }}
           >
-            {data.label}
+            <div style={{ fontWeight: 600 }}>{data.label}</div>
+            {data.trigger && <div style={{ fontSize: 10 }}>{data.trigger}</div>}
+            {data.guard && (
+              <div style={{ fontSize: 10, fontStyle: 'italic' }}>[{data.guard}]</div>
+            )}
           </div>
         </EdgeLabelRenderer>
       )}
