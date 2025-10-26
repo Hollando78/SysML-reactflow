@@ -25,6 +25,16 @@ export {
   createNodesFromSpecs,
   createEdgesFromRelationships
 } from './factories';
+export {
+  sysmlViewpoints,
+  structuralDefinitionViewpoint,
+  usageStructureViewpoint,
+  behaviorControlViewpoint,
+  interactionViewpoint,
+  stateViewpoint,
+  requirementViewpoint,
+  realizeViewpoint
+} from './viewpoints';
 export type {
   SysMLActivitySpec,
   SysMLActivityControlSpec,
@@ -54,3 +64,4 @@ export type {
   SysMLStateTransitionSpec,
   SysMLRequirementSpec
 } from './types';
+export type { SysMLModel, SysMLViewpoint, ViewMaterializationOptions } from './viewpoints';

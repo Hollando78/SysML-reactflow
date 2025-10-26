@@ -3,14 +3,19 @@ import ReactFlow, { Background, Controls, MiniMap } from 'reactflow';
 
 import { sysmlEdgeTypes } from './edges';
 import { sysmlNodeTypes } from './nodes';
+import { realizeViewpoint } from './viewpoints';
 import type { SysMLReactFlowEdge, SysMLReactFlowNode } from './types';
+import type { SysMLModel, SysMLViewpoint, ViewMaterializationOptions } from './viewpoints';
 
 type BaseReactFlowProps = ComponentProps<typeof ReactFlow>;
 
 export interface SysMLDiagramProps
   extends Omit<BaseReactFlowProps, 'nodeTypes' | 'edgeTypes' | 'nodes' | 'edges'> {
-  nodes: SysMLReactFlowNode[];
-  edges: SysMLReactFlowEdge[];
+  nodes?: SysMLReactFlowNode[];
+  edges?: SysMLReactFlowEdge[];
+  model?: SysMLModel;
+  viewpoint?: SysMLViewpoint;
+  viewOptions?: ViewMaterializationOptions;
   nodeTypes?: BaseReactFlowProps['nodeTypes'];
   edgeTypes?: BaseReactFlowProps['edgeTypes'];
   showControls?: boolean;
@@ -22,6 +27,9 @@ export const SysMLDiagram = memo(
   ({
     nodes,
     edges,
+    model,
+    viewpoint,
+    viewOptions,
     showControls = true,
     showMiniMap = true,
     showBackground = true,
@@ -30,19 +38,34 @@ export const SysMLDiagram = memo(
     children,
     fitView = true,
     ...rest
-  }: SysMLDiagramProps) => (
-    <ReactFlow
-      {...rest}
-      fitView={fitView}
-      nodes={nodes}
-      edges={edges}
-      nodeTypes={{ ...sysmlNodeTypes, ...(nodeTypes ?? {}) }}
-      edgeTypes={{ ...sysmlEdgeTypes, ...(edgeTypes ?? {}) }}
-    >
-      {showBackground && <Background gap={16} size={1} color="#393939" />}
-      {showMiniMap && <MiniMap pannable zoomable />}
-      {showControls && <Controls position="bottom-right" />}
-      {children}
-    </ReactFlow>
-  )
+  }: SysMLDiagramProps) => {
+    let resolvedNodes = nodes;
+    let resolvedEdges = edges;
+
+    if (model && viewpoint) {
+      const view = realizeViewpoint(model, viewpoint, viewOptions);
+      resolvedNodes = view.nodes;
+      resolvedEdges = view.edges;
+    }
+
+    if (!resolvedNodes || !resolvedEdges) {
+      throw new Error('SysMLDiagram requires nodes/edges or a model+viewpoint combination.');
+    }
+
+    return (
+      <ReactFlow
+        {...rest}
+        fitView={fitView}
+        nodes={resolvedNodes}
+        edges={resolvedEdges}
+        nodeTypes={{ ...sysmlNodeTypes, ...(nodeTypes ?? {}) }}
+        edgeTypes={{ ...sysmlEdgeTypes, ...(edgeTypes ?? {}) }}
+      >
+        {showBackground && <Background gap={16} size={1} color="#393939" />}
+        {showMiniMap && <MiniMap pannable zoomable />}
+        {showControls && <Controls position="bottom-right" />}
+        {children}
+      </ReactFlow>
+    );
+  }
 );

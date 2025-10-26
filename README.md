@@ -18,6 +18,24 @@ SysML-ready building blocks for [React Flow](https://reactflow.dev). The package
 - **Sequence:** Lifeline nodes with synchronous/asynchronous/return message edges.
 - **Activity:** Action nodes, fork/join bars, decision/merge diamonds, and control-flow edges.
 
+### SysML v2 viewpoints
+
+SysML v2 diagrams are view specifications. The library now ships with reusable viewpoints (e.g., `structuralDefinitionViewpoint`, `usageStructureViewpoint`) that materialize the appropriate nodes/edges for you:
+
+```tsx
+import {
+  SysMLDiagram,
+  structuralDefinitionViewpoint,
+  type SysMLModel
+} from 'sysml-reactflow';
+
+const model: SysMLModel = { nodes: specs, relationships };
+
+<SysMLDiagram model={model} viewpoint={structuralDefinitionViewpoint} />;
+```
+
+Behind the scenes the viewpoint filters the SysML element kinds, applies the correct definition/usage semantics, and renders the React Flow scene so you get a true SysML v2 environment.
+
 ## Installation
 
 ```bash
