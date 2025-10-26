@@ -100,6 +100,10 @@ npm run build-storybook   # static export in storybook-static/
 
 Every push or pull request triggers `.github/workflows/storybook.yml`, which installs dependencies, runs `npm run lint`, builds the static Storybook bundle, and publishes it as a GitHub Actions artifact named `storybook-static`. Grab the latest artifact from the Actions tab if you want to preview the CI build without running it locally.
 
+### GitHub Pages deployment
+
+The `Deploy Storybook to GitHub Pages` workflow (`.github/workflows/pages.yml`) publishes the latest Storybook build to GitHub Pages on each push to `master/main`. Visit https://hollando78.github.io/SysML-reactflow/ for the hosted docs.
+
 ## Building the package
 
 ```bash
