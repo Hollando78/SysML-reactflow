@@ -96,6 +96,10 @@ npm run storybook   # dev server on http://localhost:6006
 npm run build-storybook   # static export in storybook-static/
 ```
 
+### Continuous Storybook build
+
+Every push or pull request triggers `.github/workflows/storybook.yml`, which installs dependencies, runs `npm run lint`, builds the static Storybook bundle, and publishes it as a GitHub Actions artifact named `storybook-static`. Grab the latest artifact from the Actions tab if you want to preview the CI build without running it locally.
+
 ## Building the package
 
 ```bash
