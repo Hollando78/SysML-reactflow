@@ -12,6 +12,7 @@ SysML-ready building blocks for [React Flow](https://reactflow.dev). The package
 ### Diagram coverage
 
 - **BDD & IBD:** Block/part/value/port compartments plus allocation edges.
+- **Definition vs Usage:** SysML v2 part/action/port/item definitions wired to usages via specialization & definition edges.
 - **Use case:** Elliptical nodes with include/extend links and actor tagging.
 - **State machines:** State + state-machine nodes, transition edges with triggers/guards/effects.
 - **Sequence:** Lifeline nodes with synchronous/asynchronous/return message edges.

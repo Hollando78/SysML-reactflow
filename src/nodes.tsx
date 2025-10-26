@@ -14,7 +14,15 @@ const accentByKind: Record<string, string> = {
   state: '#33B1FF',
   'state-machine': '#3DDBD9',
   'sequence-lifeline': '#F1C21B',
-  'activity-control': '#E0E0E0'
+  'activity-control': '#E0E0E0',
+  'part-definition': '#4589FF',
+  'part-usage': '#0F62FE',
+  'action-definition': '#FF7EB6',
+  'action-usage': '#FFB3B8',
+  'port-definition': '#08BDBA',
+  'port-usage': '#1192E8',
+  'item-definition': '#BA4E00',
+  'item-usage': '#FF832B'
 };
 
 const statusColor: Record<NonNullable<SysMLNodeData['status']>, string> = {
@@ -57,6 +65,19 @@ const NodeChrome = ({ data, children }: ChromeProps) => {
           {data.stereotype ?? data.kind}
           {'>>'}
         </div>
+        {data.elementKind && (
+          <span
+            style={{
+              fontSize: 11,
+              padding: '2px 8px',
+              borderRadius: 999,
+              background: 'rgba(255,255,255,0.12)',
+              textTransform: 'capitalize'
+            }}
+          >
+            {data.elementKind}
+          </span>
+        )}
         {data.status && (
           <div
             style={{
@@ -74,6 +95,25 @@ const NodeChrome = ({ data, children }: ChromeProps) => {
         <div style={{ fontSize: 18, fontWeight: 600 }}>{data.name}</div>
         {data.documentation && (
           <p style={{ fontSize: 12, opacity: 0.8, marginTop: 4 }}>{data.documentation}</p>
+        )}
+        {data.baseDefinition && (
+          <div style={{ fontSize: 11, marginTop: 4, opacity: 0.75 }}>
+            defined by <strong>{data.baseDefinition}</strong>
+          </div>
+        )}
+        {(data.redefines?.length || data.subsets?.length) && (
+          <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {data.redefines?.length ? (
+              <div style={{ fontSize: 11, opacity: 0.75 }}>
+                redefines: {data.redefines.join(', ')}
+              </div>
+            ) : null}
+            {data.subsets?.length ? (
+              <div style={{ fontSize: 11, opacity: 0.75 }}>
+                subsets: {data.subsets.join(', ')}
+              </div>
+            ) : null}
+          </div>
         )}
         {children}
       </div>
@@ -211,6 +251,19 @@ const ParametricNode = memo((props: NodeProps<SysMLNodeData>) => {
       </NodeChrome>
       <Handle type="source" position={Position.Right} />
       <Handle type="target" position={Position.Left} />
+    </>
+  );
+});
+
+const DefinitionNode = memo((props: NodeProps<SysMLNodeData>) => {
+  const { data } = props;
+  return (
+    <>
+      <NodeChrome data={data}>
+        <CompartmentList compartments={data.compartments} />
+      </NodeChrome>
+      <Handle type="target" position={Position.Left} />
+      <Handle type="source" position={Position.Right} />
     </>
   );
 });
@@ -389,5 +442,13 @@ export const sysmlNodeTypes: NodeTypes = {
   'sysml.state': StateNode,
   'sysml.state-machine': StateMachineNode,
   'sysml.sequence-lifeline': SequenceLifelineNode,
-  'sysml.activity-control': ActivityControlNode
+  'sysml.activity-control': ActivityControlNode,
+  'sysml.part-definition': DefinitionNode,
+  'sysml.part-usage': DefinitionNode,
+  'sysml.action-definition': DefinitionNode,
+  'sysml.action-usage': DefinitionNode,
+  'sysml.port-definition': DefinitionNode,
+  'sysml.port-usage': DefinitionNode,
+  'sysml.item-definition': DefinitionNode,
+  'sysml.item-usage': DefinitionNode
 };

@@ -10,7 +10,15 @@ export type SysMLNodeKind =
   | 'state'
   | 'state-machine'
   | 'sequence-lifeline'
-  | 'activity-control';
+  | 'activity-control'
+  | 'part-definition'
+  | 'part-usage'
+  | 'action-definition'
+  | 'action-usage'
+  | 'port-definition'
+  | 'port-usage'
+  | 'item-definition'
+  | 'item-usage';
 
 export type SysMLEdgeKind =
   | 'dependency'
@@ -22,7 +30,11 @@ export type SysMLEdgeKind =
   | 'extend'
   | 'transition'
   | 'message'
-  | 'control-flow';
+  | 'control-flow'
+  | 'specialization'
+  | 'definition'
+  | 'flow-connection'
+  | 'action-flow';
 
 export interface SysMLTag {
   key: string;
@@ -50,6 +62,10 @@ export interface SysMLNodeData {
   compartments?: SysMLCompartment[];
   status?: 'draft' | 'reviewed' | 'approved' | 'deprecated';
   emphasis?: string;
+  elementKind?: 'definition' | 'usage';
+  baseDefinition?: string;
+  redefines?: string[];
+  subsets?: string[];
   controlType?: 'fork' | 'join' | 'decision' | 'merge';
 }
 
@@ -104,6 +120,70 @@ export interface SysMLParametricSpec {
   stereotype?: string;
   equation: string;
   parameters: SysMLPropertySpec[];
+}
+
+export interface SysMLPartDefinitionSpec {
+  id: string;
+  name: string;
+  stereotype?: string;
+  description?: string;
+  attributes?: SysMLPropertySpec[];
+  ports?: SysMLPortSpec[];
+  actions?: string[];
+  states?: string[];
+}
+
+export interface SysMLPartUsageSpec {
+  id: string;
+  name: string;
+  definition?: string;
+  stereotype?: string;
+  description?: string;
+  redefines?: string[];
+  subsets?: string[];
+  attributes?: SysMLPropertySpec[];
+  ports?: SysMLPortSpec[];
+  parts?: string[];
+}
+
+export interface SysMLActionDefinitionSpec {
+  id: string;
+  name: string;
+  stereotype?: string;
+  description?: string;
+  inputs?: SysMLPropertySpec[];
+  outputs?: SysMLPropertySpec[];
+}
+
+export interface SysMLActionUsageSpec extends SysMLActionDefinitionSpec {
+  definition?: string;
+  redefines?: string[];
+}
+
+export interface SysMLPortDefinitionSpec {
+  id: string;
+  name: string;
+  stereotype?: string;
+  description?: string;
+  direction?: 'in' | 'out' | 'inout';
+  items?: SysMLPropertySpec[];
+}
+
+export interface SysMLPortUsageSpec extends SysMLPortDefinitionSpec {
+  definition?: string;
+}
+
+export interface SysMLItemDefinitionSpec {
+  id: string;
+  name: string;
+  stereotype?: string;
+  description?: string;
+  unit?: string;
+  quantityKind?: string;
+}
+
+export interface SysMLItemUsageSpec extends SysMLItemDefinitionSpec {
+  definition?: string;
 }
 
 export interface SysMLActivityControlSpec {
@@ -187,7 +267,15 @@ export type SysMLNodeSpec =
   | { kind: 'state'; spec: SysMLStateSpec }
   | { kind: 'state-machine'; spec: SysMLStateMachineSpec }
   | { kind: 'sequence-lifeline'; spec: SysMLSequenceLifelineSpec }
-  | { kind: 'activity-control'; spec: SysMLActivityControlSpec };
+  | { kind: 'activity-control'; spec: SysMLActivityControlSpec }
+  | { kind: 'part-definition'; spec: SysMLPartDefinitionSpec }
+  | { kind: 'part-usage'; spec: SysMLPartUsageSpec }
+  | { kind: 'action-definition'; spec: SysMLActionDefinitionSpec }
+  | { kind: 'action-usage'; spec: SysMLActionUsageSpec }
+  | { kind: 'port-definition'; spec: SysMLPortDefinitionSpec }
+  | { kind: 'port-usage'; spec: SysMLPortUsageSpec }
+  | { kind: 'item-definition'; spec: SysMLItemDefinitionSpec }
+  | { kind: 'item-usage'; spec: SysMLItemUsageSpec };
 
 export type SysMLReactFlowNode = Node<SysMLNodeData>;
 export type SysMLReactFlowEdge = Edge<SysMLEdgeData>;

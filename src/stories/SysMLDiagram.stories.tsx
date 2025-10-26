@@ -2,12 +2,20 @@ import type { Meta, StoryObj } from '@storybook/react';
 
 import {
   SysMLDiagram,
+  createActionDefinitionNode,
+  createActionUsageNode,
   createActivityControlNode,
   createActivityNode,
   createBlockNode,
   createEdgesFromRelationships,
+  createItemDefinitionNode,
+  createItemUsageNode,
   createNodesFromSpecs,
   createParametricNode,
+  createPartDefinitionNode,
+  createPartUsageNode,
+  createPortDefinitionNode,
+  createPortUsageNode,
   createRequirementNode,
   createSequenceLifelineNode,
   createSequenceMessageEdge,
@@ -443,6 +451,137 @@ const activityGraph = (() => {
     edges
   };
 })();
+
+const definitionUsageGraph = (() => {
+  const vehicleDef = createPartDefinitionNode(
+    {
+      id: 'VEHICLE-DEF',
+      name: 'Vehicle',
+      description: 'Part definition with attributes, ports, actions, and states.',
+      attributes: [
+        { name: 'mass', type: 'ISQ::Mass' },
+        { name: 'position', type: 'Vector3' }
+      ],
+      ports: [
+        { name: 'fuelCmdPort', direction: 'in', type: 'FuelCmd' },
+        { name: 'vehicleRoadPort', direction: 'inout', type: 'RoadContact' }
+      ],
+      actions: ['providePower', 'provideBraking'],
+      states: ['vehicleStates']
+    },
+    { x: 0, y: -40 }
+  );
+
+  const suvDef = createPartDefinitionNode(
+    {
+      id: 'SUV-DEF',
+      name: 'SUV',
+      description: 'Specializes Vehicle with steering feature.',
+      attributes: [{ name: 'steeringAngle', type: 'Angle' }]
+    },
+    { x: 260, y: -40 }
+  );
+
+  const vehicleUsage = createPartUsageNode(
+    {
+      id: 'vehicle_b',
+      name: 'vehicle_b:Vehicle',
+      definition: 'Vehicle',
+      redefines: ['mass', 'dryMass'],
+      attributes: [{ name: 'dryMass', value: '1200 [kg]' }],
+      ports: [
+        { name: 'fuelCmdPort', direction: 'in', type: 'FuelCmd' },
+        { name: 'vehicleRoadPort', direction: 'inout', type: 'RoadContact' }
+      ]
+    },
+    { x: 0, y: 200 }
+  );
+
+  const providePowerDef = createActionDefinitionNode(
+    {
+      id: 'ProvidePower',
+      name: 'ProvidePower',
+      inputs: [{ name: 'pwrCmd', type: 'FuelCmd' }],
+      outputs: [{ name: 'torqueToWheels', type: 'Torque', multiplicity: '[*]' }]
+    },
+    { x: 520, y: -60 }
+  );
+
+  const providePowerUsage = createActionUsageNode(
+    {
+      id: 'providePowerUsage',
+      name: 'ProvidePower()',
+      definition: 'ProvidePower',
+      inputs: [{ name: 'pwrCmd', type: 'FuelCmd' }],
+      outputs: [{ name: 'torqueToWheels', type: 'Torque' }]
+    },
+    { x: 520, y: 140 }
+  );
+
+  const fuelPortDef = createPortDefinitionNode(
+    {
+      id: 'FuelCmdPortDef',
+      name: 'FuelCmdPort',
+      direction: 'in',
+      items: [{ name: 'fuelCmd', type: 'FuelCmd' }]
+    },
+    { x: -240, y: -40 }
+  );
+
+  const fuelPortUsage = createPortUsageNode(
+    {
+      id: 'FuelCmdPortUsage',
+      name: 'fuelCmdPort',
+      definition: 'FuelCmdPort',
+      direction: 'in',
+      items: [{ name: 'fuelCmd', type: 'FuelCmd' }]
+    },
+    { x: -240, y: 160 }
+  );
+
+  const fuelItemDef = createItemDefinitionNode(
+    {
+      id: 'FuelCmdDef',
+      name: 'FuelCmd',
+      quantityKind: 'Command',
+      unit: 'n/a'
+    },
+    { x: 260, y: -220 }
+  );
+
+  const fuelItemUsage = createItemUsageNode(
+    {
+      id: 'FuelCmdUsage',
+      name: 'fuelCmd',
+      definition: 'FuelCmd'
+    },
+    { x: 260, y: 40 }
+  );
+
+  const nodes = [
+    vehicleDef,
+    suvDef,
+    vehicleUsage,
+    providePowerDef,
+    providePowerUsage,
+    fuelPortDef,
+    fuelPortUsage,
+    fuelItemDef,
+    fuelItemUsage
+  ];
+
+  const edges = createEdgesFromRelationships([
+    { id: 'def-specialization', type: 'specialization', source: 'SUV-DEF', target: 'VEHICLE-DEF', label: 'specializes' },
+    { id: 'usage-definition', type: 'definition', source: 'vehicle_b', target: 'VEHICLE-DEF', label: 'defined by' },
+    { id: 'action-definition', type: 'definition', source: 'providePowerUsage', target: 'ProvidePower', label: 'defined by' },
+    { id: 'port-definition', type: 'definition', source: 'FuelCmdPortUsage', target: 'FuelCmdPortDef', label: 'defined by' },
+    { id: 'item-definition', type: 'definition', source: 'FuelCmdUsage', target: 'FuelCmdDef', label: 'defined by' },
+    { id: 'flow-connection', type: 'flow-connection', source: 'FuelCmdPortUsage', target: 'providePowerUsage', label: 'flow' },
+    { id: 'action-flow', type: 'action-flow', source: 'providePowerUsage', target: 'vehicle_b', label: 'performed on' }
+  ]);
+
+  return { nodes, edges };
+})();
 const meta = {
   title: 'SysML/SysMLDiagram',
   component: SysMLDiagram,
@@ -522,6 +661,18 @@ export const ActivityDiagram: Story = {
   parameters: {
     docs: {
       description: { story: 'Activity nodes connected with fork/join/decision/merge control nodes.' }
+    }
+  }
+};
+
+export const DefinitionUsageDiagram: Story = {
+  args: definitionUsageGraph,
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Part/action/port/item definitions and usages linked via specialization, definition, and flow/action-flow edges.'
+      }
     }
   }
 };
