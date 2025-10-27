@@ -26,6 +26,7 @@ const edgeColors: Record<string, string> = {
   'flow-connection': '#82cfff',
   'item-flow': '#d4bbff',
   'action-flow': '#a7f0ba',
+  succession: '#42be65',
   // Type relationships
   specialization: '#78a9ff',
   conjugation: '#d02670',
@@ -34,9 +35,9 @@ const edgeColors: Record<string, string> = {
   redefinition: '#f1c21b',
   'type-featuring': '#42be65',
   // Structural relationships
-  composition: '#161616',
-  aggregation: '#525252',
-  association: '#8d8d8d',
+  composition: '#525252',
+  aggregation: '#8d8d8d',
+  association: '#a8a8a8',
   // Feature relationships
   featuring: '#6fdc8c',
   'feature-membership': '#08bdba',
@@ -45,7 +46,7 @@ const edgeColors: Record<string, string> = {
 
 // Edge styles for different SysML relationship types
 const getEdgeStyle = (kind?: string) => {
-  const color = kind ? edgeColors[kind] ?? '#f4f4f4' : '#f4f4f4';
+  const color = kind ? edgeColors[kind] ?? '#8d8d8d' : '#8d8d8d';
 
   // Dashed lines for certain relationship types
   const dashedRelationships = ['dependency', 'satisfy', 'verify', 'refine', 'allocate', 'include', 'extend'];
@@ -53,7 +54,7 @@ const getEdgeStyle = (kind?: string) => {
 
   return {
     stroke: color,
-    strokeWidth: 2,
+    strokeWidth: 3, // Increased from 2 to 3 for better visibility
     strokeDasharray
   };
 };
@@ -200,7 +201,7 @@ const SysMLEdgeComponent = memo((props: EdgeProps<SysMLEdgeData>) => {
 
   const pathType = getPathType(data?.kind);
 
-  // Use smooth step paths for better routing with multiple handles
+  // Use appropriate path based on relationship type
   const [edgePath, labelX, labelY] = pathType === 'smooth'
     ? getSmoothStepPath({
         sourceX,
@@ -211,14 +212,11 @@ const SysMLEdgeComponent = memo((props: EdgeProps<SysMLEdgeData>) => {
         targetPosition,
         borderRadius: 8
       })
-    : getSmoothStepPath({
+    : getStraightPath({
         sourceX,
         sourceY,
         targetX,
-        targetY,
-        sourcePosition,
-        targetPosition,
-        borderRadius: 0
+        targetY
       });
 
   const style = getEdgeStyle(data?.kind);
