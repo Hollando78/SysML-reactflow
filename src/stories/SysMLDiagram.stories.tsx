@@ -208,7 +208,7 @@ const requirementSpecs: SysMLNodeSpec[] = [
       name: 'Safety Requirements',
       definition: 'sys-req',
       text: 'The vehicle shall operate safely in all conditions',
-      status: 'approved'
+      status: 'approved' as const
     }
   },
   {
@@ -507,7 +507,7 @@ const allocationSpecs: SysMLNodeSpec[] = [
       id: 'perf-001',
       name: 'Performance Requirement',
       text: 'System shall achieve 0-100 km/h in < 6s',
-      status: 'approved'
+      status: 'approved' as const
     }
   },
   {
@@ -1040,7 +1040,7 @@ const requirementSchemaSpecs: SysMLNodeSpec[] = [
       id: 'reqdef-thermal',
       name: 'ThermalRequirement',
       text: 'System shall maintain component temperatures within allowable limits.',
-      status: 'reviewed'
+      status: 'reviewed' as const
     }
   },
   {
@@ -1050,7 +1050,7 @@ const requirementSchemaSpecs: SysMLNodeSpec[] = [
       name: 'MaintainThermalStability',
       definition: 'reqdef-thermal',
       text: 'Payload electronics shall operate between -10°C and 50°C.',
-      status: 'reviewed'
+      status: 'reviewed' as const
     }
   },
   {

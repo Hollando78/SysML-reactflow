@@ -9,7 +9,7 @@ const nodes = createNodesFromSpecs([
       id: 'REQ-1',
       name: 'Mission Reliability',
       text: 'The system shall maintain 99.95% availability.',
-      status: 'reviewed'
+      status: 'reviewed' as const
     }
   },
   {
