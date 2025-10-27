@@ -56,42 +56,44 @@ export async function measureNodeDimensions(nodes: SysMLReactFlowNode[]): Promis
   const root = createRoot(container);
 
   root.render(
-    <StrictMode>
-      <ReactFlowProvider>
-        <div style={{ width: 2200, height: 2200 }}>
-          <ReactFlow
-            nodes={measurementNodes}
-            edges={noopEdges}
-            nodeTypes={sysmlNodeTypes}
-            edgeTypes={sysmlEdgeTypes}
-            fitView
-            proOptions={{ hideAttribution: true }}
-            nodesDraggable={false}
-            nodesConnectable={false}
-            elementsSelectable={false}
-            panOnDrag={false}
-            zoomOnScroll={false}
-          />
-        </div>
-      </ReactFlowProvider>
-    </StrictMode>
+    <ReactFlowProvider>
+      <div style={{ width: 2200, height: 2200 }}>
+        <ReactFlow
+          nodes={measurementNodes}
+          edges={noopEdges}
+          nodeTypes={sysmlNodeTypes}
+          edgeTypes={sysmlEdgeTypes}
+          fitView
+          proOptions={{ hideAttribution: true }}
+          nodesDraggable={false}
+          nodesConnectable={false}
+          elementsSelectable={false}
+          panOnDrag={false}
+          zoomOnScroll={false}
+        />
+      </div>
+    </ReactFlowProvider>
   );
 
   const dimensions = await new Promise<MeasuredNodeMap>((resolve) => {
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        const map: MeasuredNodeMap = {};
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            const map: MeasuredNodeMap = {};
 
-        nodes.forEach((node) => {
-          const selector = `[data-id="${CSS_ESCAPE(node.id)}"]`;
-          const el = container.querySelector(selector);
-          if (el instanceof HTMLElement) {
-            const rect = el.getBoundingClientRect();
-            map[node.id] = { width: rect.width, height: rect.height };
-          }
+            nodes.forEach((node) => {
+              const selector = `[data-id="${CSS_ESCAPE(node.id)}"]`;
+              const el = container.querySelector(selector);
+              if (el instanceof HTMLElement) {
+                const rect = el.getBoundingClientRect();
+                map[node.id] = { width: rect.width, height: rect.height };
+              }
+            });
+
+            resolve(map);
+          });
         });
-
-        resolve(map);
       });
     });
   });
