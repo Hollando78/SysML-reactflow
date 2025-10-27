@@ -1033,8 +1033,7 @@ const requirementSchemaSpecs: SysMLNodeSpec[] = [
     spec: {
       id: 'reqdef-mission',
       name: 'MissionRequirement',
-      text: 'Describes the overall mission capability the system must deliver.',
-      status: 'approved'
+      text: 'Describes the overall mission capability the system must deliver.'
     }
   },
   {
@@ -1042,8 +1041,7 @@ const requirementSchemaSpecs: SysMLNodeSpec[] = [
     spec: {
       id: 'reqdef-performance',
       name: 'PerformanceRequirement',
-      text: 'Quantifies performance thresholds the system shall achieve.',
-      status: 'approved'
+      text: 'Quantifies performance thresholds the system shall achieve.'
     }
   },
   {
@@ -1051,8 +1049,7 @@ const requirementSchemaSpecs: SysMLNodeSpec[] = [
     spec: {
       id: 'reqdef-thermal',
       name: 'ThermalRequirement',
-      text: 'System shall maintain component temperatures within allowable limits.',
-      status: 'reviewed' as const
+      text: 'System shall maintain component temperatures within allowable limits.'
     }
   },
   {

@@ -8,8 +8,7 @@ const requirementNodes = createNodesFromSpecs([
     spec: {
       id: 'reqdef-mission',
       name: 'MissionRequirement',
-      text: 'Top level mission requirement describing overall capability.',
-      status: 'approved' as const
+      text: 'Top level mission requirement describing overall capability.'
     }
   },
   {
@@ -17,8 +16,7 @@ const requirementNodes = createNodesFromSpecs([
     spec: {
       id: 'reqdef-performance',
       name: 'PerformanceRequirement',
-      text: 'Defines quantitative performance thresholds the system shall meet.',
-      status: 'approved' as const
+      text: 'Defines quantitative performance thresholds the system shall meet.'
     }
   },
   {
@@ -26,8 +24,7 @@ const requirementNodes = createNodesFromSpecs([
     spec: {
       id: 'reqdef-thermal',
       name: 'ThermalRequirement',
-      text: 'System shall maintain component temperatures within allowable limits.',
-      status: 'reviewed' as const
+      text: 'System shall maintain component temperatures within allowable limits.'
     }
   },
   {
