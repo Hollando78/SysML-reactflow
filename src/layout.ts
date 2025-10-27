@@ -386,11 +386,11 @@ function adjustSplineRoute(
 ): SysMLRoutePoint[] {
   const adjusted = points.map((pt) => ({ ...pt }));
 
-  if (source && adjusted.length >= 2 && !isCircularKind(source.kind)) {
+  if (source && adjusted.length >= 2 && !shouldSkipProjection(source.kind)) {
     adjusted[0] = projectToBoundary(adjusted[0], adjusted[1], source);
   }
 
-  if (target && adjusted.length >= 2 && !isCircularKind(target.kind)) {
+  if (target && adjusted.length >= 2 && !shouldSkipProjection(target.kind)) {
     const lastIndex = adjusted.length - 1;
     adjusted[lastIndex] = projectToBoundary(adjusted[lastIndex], adjusted[lastIndex - 1], target);
   }
@@ -398,11 +398,15 @@ function adjustSplineRoute(
   return adjusted;
 }
 
-function isCircularKind(kind?: string): boolean {
+function shouldSkipProjection(kind?: string): boolean {
   if (!kind) {
     return false;
   }
-  return kind === 'use-case-definition' || kind === 'use-case-usage';
+  return (
+    kind === 'use-case-definition' ||
+    kind === 'use-case-usage' ||
+    kind === 'activity-control'
+  );
 }
 
 function projectToBoundary(
