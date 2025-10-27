@@ -22,8 +22,8 @@ describe('Layout Module', () => {
   ];
 
   const sampleRelationships = [
-    { id: 'e1', type: 'specialize' as const, source: 'REQ-2', target: 'REQ-1' },
-    { id: 'e2', type: 'specialize' as const, source: 'REQ-3', target: 'REQ-1' }
+    { id: 'e1', type: 'specialization' as const, source: 'REQ-2', target: 'REQ-1' },
+    { id: 'e2', type: 'specialization' as const, source: 'REQ-3', target: 'REQ-1' }
   ];
 
   describe('applyLayout', () => {
