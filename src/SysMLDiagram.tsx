@@ -1,7 +1,7 @@
 import { memo, type ComponentProps } from 'react';
 import ReactFlow, { Background, Controls, MiniMap } from 'reactflow';
 
-import { sysmlEdgeTypes } from './edges';
+import { sysmlEdgeTypes, SysMLEdgeMarkersComponent } from './edges';
 import { sysmlNodeTypes } from './nodes';
 import { realizeViewpoint } from './viewpoints';
 import type { SysMLReactFlowEdge, SysMLReactFlowNode } from './types';
@@ -61,6 +61,7 @@ export const SysMLDiagram = memo(
         nodeTypes={{ ...sysmlNodeTypes, ...(nodeTypes ?? {}) }}
         edgeTypes={{ ...sysmlEdgeTypes, ...(edgeTypes ?? {}) }}
       >
+        <SysMLEdgeMarkersComponent />
         {showBackground && <Background gap={16} size={1} color="#393939" />}
         {showMiniMap && <MiniMap pannable zoomable />}
         {showControls && <Controls position="bottom-right" />}
