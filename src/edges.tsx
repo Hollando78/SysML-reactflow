@@ -1,6 +1,6 @@
-import { memo } from 'react';
-import type { EdgeProps, EdgeTypes } from 'reactflow';
-import { BaseEdge, EdgeLabelRenderer, Position, getSmoothStepPath, getStraightPath } from 'reactflow';
+import { memo, useCallback } from 'react';
+import type { EdgeProps, EdgeTypes, Node } from 'reactflow';
+import { BaseEdge, EdgeLabelRenderer, Position, getSmoothStepPath, getStraightPath, useStore } from 'reactflow';
 
 import type { SysMLEdgeData } from './types';
 
@@ -211,48 +211,99 @@ const getPathType = (kind?: string): 'smooth' | 'straight' => {
   return kind && smoothRelationships.includes(kind) ? 'smooth' : 'straight';
 };
 
+interface NodeGeometry {
+  center: { x: number; y: number };
+  anchors: Record<Position, { x: number; y: number }>;
+}
+
+const buildGeometry = (
+  node: Node | undefined,
+  fallbackX: number,
+  fallbackY: number
+): NodeGeometry => {
+  if (!node || node.width === undefined || node.height === undefined || !node.positionAbsolute) {
+    return {
+      center: { x: fallbackX, y: fallbackY },
+      anchors: {
+        [Position.Top]: { x: fallbackX, y: fallbackY },
+        [Position.Right]: { x: fallbackX, y: fallbackY },
+        [Position.Bottom]: { x: fallbackX, y: fallbackY },
+        [Position.Left]: { x: fallbackX, y: fallbackY }
+      }
+    };
+  }
+
+  const { positionAbsolute, width, height } = node;
+  const center = {
+    x: positionAbsolute.x + width / 2,
+    y: positionAbsolute.y + height / 2
+  };
+
+  return {
+    center,
+    anchors: {
+      [Position.Top]: { x: center.x, y: positionAbsolute.y },
+      [Position.Right]: { x: positionAbsolute.x + width, y: center.y },
+      [Position.Bottom]: { x: center.x, y: positionAbsolute.y + height },
+      [Position.Left]: { x: positionAbsolute.x, y: center.y }
+    }
+  };
+};
+
 const SysMLEdgeComponent = memo((props: EdgeProps<SysMLEdgeData>) => {
-  const { id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, data } = props;
+  const { id, source, target, sourceX, sourceY, targetX, targetY, data } = props;
+
+  const sourceNode = useStore(
+    useCallback((state) => state.nodeInternals.get(source), [source])
+  );
+  const targetNode = useStore(
+    useCallback((state) => state.nodeInternals.get(target), [target])
+  );
+
+  const sourceGeometry = buildGeometry(sourceNode, sourceX, sourceY);
+  const targetGeometry = buildGeometry(targetNode, targetX, targetY);
+
+  const dx = targetGeometry.center.x - sourceGeometry.center.x;
+  const dy = targetGeometry.center.y - sourceGeometry.center.y;
+  const horizontalDominant = Math.abs(dx) >= Math.abs(dy);
+
+  const sourceSide = horizontalDominant
+    ? dx >= 0
+      ? Position.Right
+      : Position.Left
+    : dy >= 0
+      ? Position.Bottom
+      : Position.Top;
+
+  const targetSide = horizontalDominant
+    ? dx >= 0
+      ? Position.Left
+      : Position.Right
+    : dy >= 0
+      ? Position.Top
+      : Position.Bottom;
+
+  const sourceAnchor = sourceGeometry.anchors[sourceSide] ?? { x: sourceX, y: sourceY };
+  const targetAnchor = targetGeometry.anchors[targetSide] ?? { x: targetX, y: targetY };
 
   const pathType = getPathType(data?.kind);
-  const dx = targetX - sourceX;
-  const dy = targetY - sourceY;
-  const horizontalDominant = Math.abs(dx) >= Math.abs(dy);
-  const autoSourcePosition =
-    sourcePosition ??
-    (horizontalDominant
-      ? dx >= 0
-        ? Position.Right
-        : Position.Left
-      : dy >= 0
-        ? Position.Bottom
-        : Position.Top);
-  const autoTargetPosition =
-    targetPosition ??
-    (horizontalDominant
-      ? dx >= 0
-        ? Position.Left
-        : Position.Right
-      : dy >= 0
-        ? Position.Top
-        : Position.Bottom);
 
   // Use appropriate path based on relationship type
   const [edgePath, labelX, labelY] = pathType === 'smooth'
     ? getSmoothStepPath({
-        sourceX,
-        sourceY,
-        targetX,
-        targetY,
-        sourcePosition: autoSourcePosition,
-        targetPosition: autoTargetPosition,
+        sourceX: sourceAnchor.x,
+        sourceY: sourceAnchor.y,
+        targetX: targetAnchor.x,
+        targetY: targetAnchor.y,
+        sourcePosition: sourceSide,
+        targetPosition: targetSide,
         borderRadius: 8
       })
     : getStraightPath({
-        sourceX,
-        sourceY,
-        targetX,
-        targetY
+        sourceX: sourceAnchor.x,
+        sourceY: sourceAnchor.y,
+        targetX: targetAnchor.x,
+        targetY: targetAnchor.y
       });
 
   const style = getEdgeStyle(data?.kind);
