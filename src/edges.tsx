@@ -175,7 +175,7 @@ const getMarkerEnd = (kind?: string): string => {
 // Get appropriate path style for relationship type
 const getPathType = (kind?: string): 'smooth' | 'straight' => {
   // Use smooth step for structured relationships
-  const smoothRelationships = ['composition', 'aggregation', 'association', 'flow-connection'];
+  const smoothRelationships = ['composition', 'aggregation', 'association', 'flow-connection', 'connection', 'featuring'];
   return kind && smoothRelationships.includes(kind) ? 'smooth' : 'straight';
 };
 
@@ -183,6 +183,8 @@ const SysMLEdgeComponent = memo((props: EdgeProps<SysMLEdgeData>) => {
   const { id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, data } = props;
 
   const pathType = getPathType(data?.kind);
+
+  // Use smooth step paths for better routing with multiple handles
   const [edgePath, labelX, labelY] = pathType === 'smooth'
     ? getSmoothStepPath({
         sourceX,
@@ -190,13 +192,17 @@ const SysMLEdgeComponent = memo((props: EdgeProps<SysMLEdgeData>) => {
         targetX,
         targetY,
         sourcePosition,
-        targetPosition
+        targetPosition,
+        borderRadius: 8
       })
-    : getStraightPath({
+    : getSmoothStepPath({
         sourceX,
         sourceY,
         targetX,
-        targetY
+        targetY,
+        sourcePosition,
+        targetPosition,
+        borderRadius: 0
       });
 
   const style = getEdgeStyle(data?.kind);

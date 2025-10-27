@@ -81,6 +81,16 @@ type ChromeProps = {
   children: ReactNode;
 };
 
+// Standard connection handles for all nodes (top, right, bottom, left)
+const StandardHandles = () => (
+  <>
+    <Handle type="target" position={Position.Top} id="top" style={{ background: '#525252' }} />
+    <Handle type="source" position={Position.Right} id="right" style={{ background: '#525252' }} />
+    <Handle type="target" position={Position.Bottom} id="bottom" style={{ background: '#525252' }} />
+    <Handle type="source" position={Position.Left} id="left" style={{ background: '#525252' }} />
+  </>
+);
+
 const NodeChrome = ({ data, children }: ChromeProps) => {
   const accent = accentByKind[data.kind] ?? '#262626';
   return (
@@ -237,8 +247,7 @@ const RequirementNode = memo((props: NodeProps<SysMLNodeData>) => {
       <NodeChrome data={data}>
         <CompartmentList compartments={data.compartments} />
       </NodeChrome>
-      <Handle type="target" position={Position.Left} />
-      <Handle type="source" position={Position.Right} />
+      <StandardHandles />
     </>
   );
 });
@@ -250,8 +259,8 @@ const BlockNode = memo((props: NodeProps<SysMLNodeData>) => {
       <NodeChrome data={data}>
         <CompartmentList compartments={data.compartments} />
       </NodeChrome>
-      <Handle type="target" position={Position.Top} />
-      <Handle type="source" position={Position.Bottom} />
+      <StandardHandles />
+      
     </>
   );
 });
@@ -266,8 +275,6 @@ const ActivityNode = memo((props: NodeProps<SysMLNodeData>) => {
         )}
         <CompartmentList compartments={data.compartments} />
       </NodeChrome>
-      <Handle type="target" position={Position.Left} />
-      <Handle type="source" position={Position.Right} />
     </>
   );
 });
@@ -293,8 +300,6 @@ const ParametricNode = memo((props: NodeProps<SysMLNodeData>) => {
         )}
         <CompartmentList compartments={data.compartments} />
       </NodeChrome>
-      <Handle type="source" position={Position.Right} />
-      <Handle type="target" position={Position.Left} />
     </>
   );
 });
@@ -306,8 +311,6 @@ const DefinitionNode = memo((props: NodeProps<SysMLNodeData>) => {
       <NodeChrome data={data}>
         <CompartmentList compartments={data.compartments} />
       </NodeChrome>
-      <Handle type="target" position={Position.Left} />
-      <Handle type="source" position={Position.Right} />
     </>
   );
 });
@@ -345,8 +348,6 @@ const UseCaseNode = memo((props: NodeProps<SysMLNodeData>) => {
           <div style={{ fontSize: 12, marginTop: 8, opacity: 0.75 }}>{data.documentation}</div>
         )}
       </div>
-      <Handle type="target" position={Position.Left} />
-      <Handle type="source" position={Position.Right} />
     </>
   );
 });
@@ -365,8 +366,6 @@ const StateNode = memo((props: NodeProps<SysMLNodeData>) => {
         </div>
         <CompartmentList compartments={data.compartments} />
       </NodeChrome>
-      <Handle type="target" position={Position.Left} />
-      <Handle type="source" position={Position.Right} />
     </>
   );
 });
@@ -378,8 +377,8 @@ const StateMachineNode = memo((props: NodeProps<SysMLNodeData>) => {
       <NodeChrome data={data}>
         <CompartmentList compartments={data.compartments} />
       </NodeChrome>
-      <Handle type="target" position={Position.Top} />
-      <Handle type="source" position={Position.Bottom} />
+      <StandardHandles />
+      
     </>
   );
 });
@@ -468,10 +467,8 @@ const ActivityControlNode = memo((props: NodeProps<SysMLNodeData>) => {
           }}
         />
       )}
-      <Handle type="target" position={Position.Left} />
-      <Handle type="source" position={Position.Right} />
-      <Handle type="target" position={Position.Top} />
-      <Handle type="source" position={Position.Bottom} />
+      <StandardHandles />
+      
     </>
   );
 });
