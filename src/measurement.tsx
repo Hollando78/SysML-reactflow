@@ -63,7 +63,7 @@ export async function measureNodeDimensions(nodes: SysMLReactFlowNode[]): Promis
           edges={noopEdges}
           nodeTypes={sysmlNodeTypes}
           edgeTypes={sysmlEdgeTypes}
-          fitView
+          defaultViewport={{ x: 0, y: 0, zoom: 1 }}
           proOptions={{ hideAttribution: true }}
           nodesDraggable={false}
           nodesConnectable={false}
