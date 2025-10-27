@@ -46,7 +46,7 @@ const functionalNodes = createNodesFromSpecs([
     spec: {
       id: 'act-command-actuators',
       name: 'CommandActuators',
-      performer: 'ActuatorCluster',
+      performedAction: 'ActuatorCluster',
       inputs: [{ name: 'controlCommand', type: 'CommandFrame' }],
       outputs: [{ name: 'appliedThrust', type: 'ThrustVector' }]
     }

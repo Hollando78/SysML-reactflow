@@ -813,6 +813,388 @@ export const CompositionVsAggregation_Dark: Story = {
 };
 
 // ============================================================================
+// System Decomposition - Three-Level Breakdown
+// ============================================================================
+
+const decompositionSpecs: SysMLNodeSpec[] = [
+  {
+    kind: 'part-definition',
+    spec: {
+      id: 'sys-orbital-comm',
+      name: 'OrbitalCommsSystem',
+      description: 'Provides continuous communications between ground and orbital assets.',
+      attributes: [
+        { name: 'coverage', type: 'Percentage', multiplicity: '[>95%]' },
+        { name: 'latency', type: 'Duration', multiplicity: '[<200ms]' }
+      ]
+    }
+  },
+  {
+    kind: 'part-definition',
+    spec: {
+      id: 'sub-communications',
+      name: 'CommunicationsSubsystem',
+      description: 'Handles RF front-end and digital signal processing.',
+      ports: [
+        { name: 'payloadLink', type: 'KaBand', direction: 'in' },
+        { name: 'downlink', type: 'KuBand', direction: 'out' }
+      ]
+    }
+  },
+  {
+    kind: 'part-definition',
+    spec: {
+      id: 'sub-platform',
+      name: 'PlatformSubsystem',
+      description: 'Provides power, thermal and attitude resources for the payload.',
+      ports: [
+        { name: 'powerBus', type: '28V', direction: 'out' },
+        { name: 'telemetryBus', type: 'SpaceWire', direction: 'in' }
+      ]
+    }
+  },
+  {
+    kind: 'part-definition',
+    spec: {
+      id: 'comp-rf-front-end',
+      name: 'RFFrontEnd',
+      description: 'Performs RF switching, amplification and filtering.'
+    }
+  },
+  {
+    kind: 'part-definition',
+    spec: {
+      id: 'comp-signal-processor',
+      name: 'SignalProcessor',
+      description: 'Executes modulation, demodulation and coding algorithms.'
+    }
+  },
+  {
+    kind: 'part-definition',
+    spec: {
+      id: 'comp-thermal-control',
+      name: 'ThermalControlUnit',
+      description: 'Maintains payload temperature limits.'
+    }
+  },
+  {
+    kind: 'part-definition',
+    spec: {
+      id: 'comp-power-regulator',
+      name: 'PowerRegulator',
+      description: 'Regulates spacecraft power distribution.'
+    }
+  }
+];
+
+const decompositionRelationships: SysMLRelationshipSpec[] = [
+  { id: 'rel-system-comm', type: 'composition', source: 'sys-orbital-comm', target: 'sub-communications', label: 'composes' },
+  { id: 'rel-system-platform', type: 'composition', source: 'sys-orbital-comm', target: 'sub-platform', label: 'composes' },
+  { id: 'rel-comm-rf', type: 'composition', source: 'sub-communications', target: 'comp-rf-front-end', label: 'contains' },
+  { id: 'rel-comm-processor', type: 'composition', source: 'sub-communications', target: 'comp-signal-processor', label: 'contains' },
+  { id: 'rel-platform-thermal', type: 'composition', source: 'sub-platform', target: 'comp-thermal-control', label: 'contains' },
+  { id: 'rel-platform-power', type: 'composition', source: 'sub-platform', target: 'comp-power-regulator', label: 'contains' }
+];
+
+export const SystemDecomposition: Story = {
+  render: () => <AutoLayoutStory specs={decompositionSpecs} relationships={decompositionRelationships} diagramType="bdd" background="light" />,
+  parameters: {
+    docs: {
+      description: {
+        story: 'Three-level system decomposition showing system, subsystem, and component parts with composition relationships.'
+      }
+    }
+  }
+};
+
+// ============================================================================
+// Component Interface View
+// ============================================================================
+
+const interfaceSpecs: SysMLNodeSpec[] = [
+  {
+    kind: 'part-definition',
+    spec: {
+      id: 'part-guidance-computer',
+      name: 'GuidanceComputer',
+      description: 'Central flight computer providing guidance, navigation, and control.',
+      ports: [
+        { name: 'commandOut', type: 'CommandBus', direction: 'out' },
+        { name: 'telemetryIn', type: 'TelemetryBus', direction: 'in' }
+      ]
+    }
+  },
+  {
+    kind: 'part-definition',
+    spec: {
+      id: 'part-throttle-ctrl',
+      name: 'ThrottleController',
+      description: 'Executes throttle commands against propulsion actuators.',
+      ports: [
+        { name: 'commandIn', type: 'CommandBus', direction: 'in' },
+        { name: 'statusOut', type: 'StatusBus', direction: 'out' }
+      ]
+    }
+  },
+  {
+    kind: 'part-definition',
+    spec: {
+      id: 'part-nav-sensor',
+      name: 'NavigationSensor',
+      description: 'Provides inertial measurement updates and state estimates.',
+      ports: [
+        { name: 'stateOut', type: 'StateFeedback', direction: 'out' },
+        { name: 'healthOut', type: 'StatusBus', direction: 'out' }
+      ]
+    }
+  },
+  {
+    kind: 'part-definition',
+    spec: {
+      id: 'part-actuator-cluster',
+      name: 'ActuatorCluster',
+      description: 'Group of propulsion actuators implementing thrust commands.',
+      ports: [
+        { name: 'throttleIn', type: 'CommandBus', direction: 'in' },
+        { name: 'statusTelemetry', type: 'StatusBus', direction: 'out' }
+      ]
+    }
+  },
+  {
+    kind: 'interface-definition',
+    spec: {
+      id: 'if-command-bus',
+      name: 'CommandBus',
+      description: 'Logical interface carrying guidance commands.',
+      ports: [{ name: 'command', type: 'CommandFrame', direction: 'out' }]
+    }
+  },
+  {
+    kind: 'interface-definition',
+    spec: {
+      id: 'if-status-bus',
+      name: 'StatusBus',
+      description: 'Publishes health and limit monitoring status across components.',
+      ports: [{ name: 'status', type: 'StatusFrame', direction: 'out' }]
+    }
+  },
+  {
+    kind: 'interface-definition',
+    spec: {
+      id: 'if-state-feedback',
+      name: 'StateFeedback',
+      description: 'Streaming telemetry interface for attitude and rate estimates.',
+      ports: [{ name: 'stateVector', type: 'StateVector', direction: 'out' }]
+    }
+  }
+];
+
+const interfaceRelationships: SysMLRelationshipSpec[] = [
+  { id: 'rel-guidance-command', type: 'flow-connection', source: 'part-guidance-computer', target: 'part-throttle-ctrl', label: 'commandOut → commandIn' },
+  { id: 'rel-guidance-actuators', type: 'flow-connection', source: 'part-guidance-computer', target: 'part-actuator-cluster', label: 'commandOut → throttleIn' },
+  { id: 'rel-sensor-guidance', type: 'flow-connection', source: 'part-nav-sensor', target: 'part-guidance-computer', label: 'stateOut → telemetryIn' },
+  { id: 'rel-sensor-status', type: 'flow-connection', source: 'part-nav-sensor', target: 'part-throttle-ctrl', label: 'healthOut → statusOut' },
+  { id: 'rel-actuator-status', type: 'flow-connection', source: 'part-actuator-cluster', target: 'part-guidance-computer', label: 'statusTelemetry → telemetryIn' },
+  { id: 'rel-command-interface', type: 'feature-typing', source: 'part-guidance-computer', target: 'if-command-bus', label: 'uses CommandBus' },
+  { id: 'rel-status-interface', type: 'feature-typing', source: 'part-throttle-ctrl', target: 'if-status-bus', label: 'publishes StatusBus' },
+  { id: 'rel-state-interface', type: 'feature-typing', source: 'part-nav-sensor', target: 'if-state-feedback', label: 'provides StateFeedback' }
+];
+
+export const ComponentInterfaceView: Story = {
+  render: () => <AutoLayoutStory specs={interfaceSpecs} relationships={interfaceRelationships} diagramType="bdd" background="light" />,
+  parameters: {
+    docs: {
+      description: {
+        story: 'Interface diagram illustrating shared buses and flow connections between collaborating components.'
+      }
+    }
+  }
+};
+
+// ============================================================================
+// Requirements Schema - Traceability Pattern
+// ============================================================================
+
+const requirementSchemaSpecs: SysMLNodeSpec[] = [
+  {
+    kind: 'requirement-definition',
+    spec: {
+      id: 'reqdef-mission',
+      name: 'MissionRequirement',
+      text: 'Describes the overall mission capability the system must deliver.',
+      status: 'approved'
+    }
+  },
+  {
+    kind: 'requirement-definition',
+    spec: {
+      id: 'reqdef-performance',
+      name: 'PerformanceRequirement',
+      text: 'Quantifies performance thresholds the system shall achieve.',
+      status: 'approved'
+    }
+  },
+  {
+    kind: 'requirement-definition',
+    spec: {
+      id: 'reqdef-thermal',
+      name: 'ThermalRequirement',
+      text: 'System shall maintain component temperatures within allowable limits.',
+      status: 'reviewed'
+    }
+  },
+  {
+    kind: 'requirement-usage',
+    spec: {
+      id: 'requse-thermal-stable',
+      name: 'MaintainThermalStability',
+      definition: 'reqdef-thermal',
+      text: 'Payload electronics shall operate between -10°C and 50°C.',
+      status: 'reviewed'
+    }
+  },
+  {
+    kind: 'constraint-definition',
+    spec: {
+      id: 'constraint-thermal',
+      name: 'ThermalConstraint',
+      description: 'temperature <= 50°C && temperature >= -10°C'
+    }
+  },
+  {
+    kind: 'analysis-case-definition',
+    spec: {
+      id: 'analysis-thermal',
+      name: 'ThermalAnalysisCase',
+      description: 'Analytical demonstration of worst-case thermal behaviour.'
+    }
+  },
+  {
+    kind: 'verification-case-definition',
+    spec: {
+      id: 'verification-thermal',
+      name: 'ThermalVerificationCase',
+      description: 'Environmental chamber test verifying thermal compliance.'
+    }
+  }
+];
+
+const requirementSchemaRelationships: SysMLRelationshipSpec[] = [
+  { id: 'rel-performance-mission', type: 'specialization', source: 'reqdef-performance', target: 'reqdef-mission', label: 'specialises' },
+  { id: 'rel-thermal-mission', type: 'specialization', source: 'reqdef-thermal', target: 'reqdef-mission', label: 'specialises' },
+  { id: 'rel-thermal-usage-definition', type: 'type-featuring', source: 'requse-thermal-stable', target: 'reqdef-thermal', label: 'usage of' },
+  { id: 'rel-thermal-refine', type: 'refine', source: 'constraint-thermal', target: 'requse-thermal-stable', label: 'refines' },
+  { id: 'rel-analysis-refines', type: 'refine', source: 'analysis-thermal', target: 'constraint-thermal', label: 'refines' },
+  { id: 'rel-verification-verifies', type: 'verify', source: 'verification-thermal', target: 'requse-thermal-stable', label: 'verifies' }
+];
+
+export const RequirementsSchema: Story = {
+  render: () => <AutoLayoutStory specs={requirementSchemaSpecs} relationships={requirementSchemaRelationships} diagramType="requirements" background="light" />,
+  parameters: {
+    docs: {
+      description: {
+        story: 'Requirements schema linking mission, derived requirements, constraints, analysis, and verification cases.'
+      }
+    }
+  }
+};
+
+// ============================================================================
+// Functional Flow - Activity Sequencing
+// ============================================================================
+
+const functionalSpecs: SysMLNodeSpec[] = [
+  {
+    kind: 'action-definition',
+    spec: {
+      id: 'actdef-guidance-loop',
+      name: 'ExecuteGuidanceLoop',
+      description: 'Core closed-loop guidance, navigation, and control behaviour.'
+    }
+  },
+  {
+    kind: 'action-usage',
+    spec: {
+      id: 'act-sense-state',
+      name: 'SenseState',
+      definition: 'actdef-guidance-loop',
+      description: 'Acquire inertial sensor measurements and vehicle state.',
+      outputs: [{ name: 'stateEstimate', type: 'StateVector' }]
+    }
+  },
+  {
+    kind: 'action-usage',
+    spec: {
+      id: 'act-estimate-trajectory',
+      name: 'EstimateTrajectory',
+      definition: 'actdef-guidance-loop',
+      inputs: [{ name: 'stateEstimate', type: 'StateVector' }],
+      outputs: [{ name: 'trajectoryState', type: 'Trajectory' }]
+    }
+  },
+  {
+    kind: 'action-usage',
+    spec: {
+      id: 'act-compute-control',
+      name: 'ComputeControlLaw',
+      definition: 'actdef-guidance-loop',
+      inputs: [{ name: 'trajectoryState', type: 'Trajectory' }],
+      outputs: [{ name: 'controlCommand', type: 'CommandFrame' }]
+    }
+  },
+  {
+    kind: 'perform-action',
+    spec: {
+      id: 'act-command-actuators',
+      name: 'CommandActuators',
+      performedAction: 'ActuatorCluster',
+      inputs: [{ name: 'controlCommand', type: 'CommandFrame' }],
+      outputs: [{ name: 'appliedThrust', type: 'ThrustVector' }]
+    }
+  },
+  {
+    kind: 'activity-control',
+    spec: {
+      id: 'ctrl-decision',
+      name: 'FlightModeDecision',
+      controlType: 'decision'
+    }
+  },
+  {
+    kind: 'action-usage',
+    spec: {
+      id: 'act-publish-telemetry',
+      name: 'PublishTelemetry',
+      definition: 'actdef-guidance-loop',
+      inputs: [
+        { name: 'stateEstimate', type: 'StateVector' },
+        { name: 'appliedThrust', type: 'ThrustVector' }
+      ]
+    }
+  }
+];
+
+const functionalRelationships: SysMLRelationshipSpec[] = [
+  { id: 'rel-sense-estimate', type: 'succession', source: 'act-sense-state', target: 'act-estimate-trajectory', label: 'then' },
+  { id: 'rel-estimate-control', type: 'succession', source: 'act-estimate-trajectory', target: 'act-compute-control', label: 'then' },
+  { id: 'rel-control-command', type: 'succession', source: 'act-compute-control', target: 'act-command-actuators', label: 'then' },
+  { id: 'rel-command-telemetry', type: 'succession', source: 'act-command-actuators', target: 'act-publish-telemetry', label: 'feeds' },
+  { id: 'rel-sense-decision', type: 'control-flow', source: 'act-sense-state', target: 'ctrl-decision', label: 'monitor limits' },
+  { id: 'rel-decision-telemetry', type: 'control-flow', source: 'ctrl-decision', target: 'act-publish-telemetry', label: 'route mode' }
+];
+
+export const FunctionalFlow: Story = {
+  render: () => <AutoLayoutStory specs={functionalSpecs} relationships={functionalRelationships} diagramType="activity" background="light" />,
+  parameters: {
+    docs: {
+      description: {
+        story: 'Functional activity flow showing sensing, estimation, control computation, actuator command, and telemetry publication.'
+      }
+    }
+  }
+};
+
+// ============================================================================
 // Multi-Directional Connections - Showcasing 4-Way Handles
 // ============================================================================
 
