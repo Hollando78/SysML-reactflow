@@ -1,5 +1,6 @@
 import { memo, type ReactNode } from 'react';
 import type { NodeProps, NodeTypes } from 'reactflow';
+import { Handle, Position } from 'reactflow';
 
 import type { SysMLCompartment, SysMLNodeData } from './types';
 
@@ -79,6 +80,24 @@ type ChromeProps = {
   data: SysMLNodeData;
   children: ReactNode;
 };
+
+const hiddenHandleStyle = {
+  width: 1,
+  height: 1,
+  opacity: 0,
+  background: 'transparent',
+  border: 'none',
+  pointerEvents: 'none'
+} as const;
+
+const HiddenHandles = () => (
+  <>
+    <Handle type="target" position={Position.Top} style={hiddenHandleStyle} />
+    <Handle type="source" position={Position.Right} style={hiddenHandleStyle} />
+    <Handle type="target" position={Position.Bottom} style={hiddenHandleStyle} />
+    <Handle type="source" position={Position.Left} style={hiddenHandleStyle} />
+  </>
+);
 
 const NodeChrome = ({ data, children }: ChromeProps) => {
   const accent = accentByKind[data.kind] ?? '#262626';
@@ -236,6 +255,7 @@ const RequirementNode = memo((props: NodeProps<SysMLNodeData>) => {
       <NodeChrome data={data}>
         <CompartmentList compartments={data.compartments} />
       </NodeChrome>
+      <HiddenHandles />
     </>
   );
 });
@@ -247,6 +267,7 @@ const BlockNode = memo((props: NodeProps<SysMLNodeData>) => {
       <NodeChrome data={data}>
         <CompartmentList compartments={data.compartments} />
       </NodeChrome>
+      <HiddenHandles />
     </>
   );
 });
@@ -261,6 +282,7 @@ const ActivityNode = memo((props: NodeProps<SysMLNodeData>) => {
         )}
         <CompartmentList compartments={data.compartments} />
       </NodeChrome>
+      <HiddenHandles />
     </>
   );
 });
@@ -286,6 +308,7 @@ const ParametricNode = memo((props: NodeProps<SysMLNodeData>) => {
         )}
         <CompartmentList compartments={data.compartments} />
       </NodeChrome>
+      <HiddenHandles />
     </>
   );
 });
@@ -297,6 +320,7 @@ const DefinitionNode = memo((props: NodeProps<SysMLNodeData>) => {
       <NodeChrome data={data}>
         <CompartmentList compartments={data.compartments} />
       </NodeChrome>
+      <HiddenHandles />
     </>
   );
 });
@@ -334,6 +358,7 @@ const UseCaseNode = memo((props: NodeProps<SysMLNodeData>) => {
           <div style={{ fontSize: 12, marginTop: 8, opacity: 0.75 }}>{data.documentation}</div>
         )}
       </div>
+      <HiddenHandles />
     </>
   );
 });
@@ -352,6 +377,7 @@ const StateNode = memo((props: NodeProps<SysMLNodeData>) => {
         </div>
         <CompartmentList compartments={data.compartments} />
       </NodeChrome>
+      <HiddenHandles />
     </>
   );
 });
@@ -363,6 +389,7 @@ const StateMachineNode = memo((props: NodeProps<SysMLNodeData>) => {
       <NodeChrome data={data}>
         <CompartmentList compartments={data.compartments} />
       </NodeChrome>
+      <HiddenHandles />
     </>
   );
 });
@@ -413,6 +440,7 @@ const SequenceLifelineNode = memo((props: NodeProps<SysMLNodeData>) => {
           />
         </div>
       </div>
+      <HiddenHandles />
     </>
   );
 });
@@ -447,6 +475,7 @@ const ActivityControlNode = memo((props: NodeProps<SysMLNodeData>) => {
           }}
         />
       )}
+      <HiddenHandles />
     </>
   );
 });
