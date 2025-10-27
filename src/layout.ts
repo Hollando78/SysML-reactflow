@@ -86,21 +86,6 @@ const defaultOptions: Required<LayoutOptions> = {
 
 const elk = new ELK();
 
-type NodeShape = 'rect' | 'ellipse' | 'diamond';
-
-interface NodeGeometry {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  centerX: number;
-  centerY: number;
-  kind?: string;
-  shape: NodeShape;
-}
-
-const EDGE_CLEARANCE = 16;
-
 interface NodeGeometry {
   x: number;
   y: number;
@@ -326,12 +311,7 @@ const structuralEdgeKinds = new Set<string>([
   'variant-membership',
   'type-featuring',
   'feature-chaining',
-  'binding-connector',
-  'allocate',
-  'satisfy',
-  'verify',
-  'refine',
-  'dependency'
+  'binding-connector'
 ]);
 
 function getRoutingModeForEdge(edge: Edge<SysMLEdgeData>): SysMLEdgeRouting {
@@ -370,7 +350,10 @@ function extractEdgeRoutes(
       const targetId = edge.targets?.[0];
       const sourceGeom = sourceId ? geometry.get(sourceId) : undefined;
       const targetGeom = targetId ? geometry.get(targetId) : undefined;
-      const adjustedPoints = adjustRoutePoints(points, sourceGeom, targetGeom, routing);
+      const adjustedPoints =
+        routing === 'spline'
+          ? adjustSplineRoute(points, sourceGeom, targetGeom)
+          : points;
       routes.set(edge.id, { points: adjustedPoints, routing });
     }
   });
@@ -396,103 +379,37 @@ function pushPoint(points: SysMLRoutePoint[], point?: { x: number; y: number } |
   }
 }
 
-function adjustRoutePoints(
+function adjustSplineRoute(
   points: SysMLRoutePoint[],
-  source: NodeGeometry | undefined,
-  target: NodeGeometry | undefined,
-  routing: SysMLEdgeRouting
+  source?: NodeGeometry,
+  target?: NodeGeometry
 ): SysMLRoutePoint[] {
   const adjusted = points.map((pt) => ({ ...pt }));
 
   if (source && adjusted.length >= 2 && !shouldSkipProjection(source.kind)) {
-    adjusted[0] = applyClearance(
-      projectToBoundary(adjusted[0], adjusted[1], source),
-      adjusted[1],
-      source,
-      true,
-      routing
-    );
+    adjusted[0] = projectToBoundary(adjusted[0], adjusted[1], source);
   }
 
   if (target && adjusted.length >= 2 && !shouldSkipProjection(target.kind)) {
     const lastIndex = adjusted.length - 1;
-    adjusted[lastIndex] = applyClearance(
-      projectToBoundary(adjusted[lastIndex], adjusted[lastIndex - 1], target),
-      adjusted[lastIndex - 1],
-      target,
-      false,
-      routing
-    );
+    adjusted[lastIndex] = projectToBoundary(adjusted[lastIndex], adjusted[lastIndex - 1], target);
   }
 
   return adjusted;
 }
 
-function applyClearance(
-  projected: SysMLRoutePoint,
-  neighbor: SysMLRoutePoint,
-  geom: NodeGeometry,
-  fromSource: boolean,
-  routing: SysMLEdgeRouting
-): SysMLRoutePoint {
-  if (routing !== 'spline') {
-    return projected;
-  }
-
-  const clearance = EDGE_CLEARANCE;
-  const vectorX = neighbor.x - projected.x;
-  const vectorY = neighbor.y - projected.y;
-  const length = Math.hypot(vectorX, vectorY);
-
-  if (length === 0) {
-    return projected;
-  }
-
-  const factor = clearance / length;
-  const adjustmentX = vectorX * factor;
-  const adjustmentY = vectorY * factor;
-
-  const adjustedPoint = {
-    x: fromSource ? projected.x + adjustmentX : projected.x - adjustmentX,
-    y: fromSource ? projected.y + adjustmentY : projected.y - adjustmentY
-  };
-
-  return adjustedPoint;
-}
-
 function shouldSkipProjection(kind?: string): boolean {
-  return false;
+  if (!kind) {
+    return false;
+  }
+  return (
+    kind === 'use-case-definition' ||
+    kind === 'use-case-usage' ||
+    kind === 'activity-control'
+  );
 }
 
 function projectToBoundary(
-  boundaryPoint: SysMLRoutePoint,
-  referencePoint: SysMLRoutePoint,
-  geom: NodeGeometry
-): SysMLRoutePoint {
-  switch (geom.shape) {
-    case 'ellipse':
-      return projectToEllipse(boundaryPoint, referencePoint, geom);
-    case 'diamond':
-      return projectToDiamond(boundaryPoint, referencePoint, geom);
-    default:
-      return projectToRectangle(boundaryPoint, referencePoint, geom);
-  }
-}
-
-function getNodeShape(kind?: string): NodeShape {
-  if (!kind) {
-    return 'rect';
-  }
-  if (kind === 'use-case-definition' || kind === 'use-case-usage') {
-    return 'ellipse';
-  }
-  if (kind === 'activity-control') {
-    return 'diamond';
-  }
-  return 'rect';
-}
-
-function projectToRectangle(
   boundaryPoint: SysMLRoutePoint,
   referencePoint: SysMLRoutePoint,
   geom: NodeGeometry
@@ -538,68 +455,6 @@ function projectToRectangle(
   };
 }
 
-function projectToEllipse(
-  boundaryPoint: SysMLRoutePoint,
-  referencePoint: SysMLRoutePoint,
-  geom: NodeGeometry
-): SysMLRoutePoint {
-  const { centerX, centerY, width, height } = geom;
-  const rx = width / 2;
-  const ry = height / 2;
-
-  let dx = boundaryPoint.x - centerX;
-  let dy = boundaryPoint.y - centerY;
-
-  if (dx === 0 && dy === 0) {
-    dx = referencePoint.x - centerX;
-    dy = referencePoint.y - centerY;
-  }
-
-  if (dx === 0 && dy === 0) {
-    return { x: centerX, y: centerY };
-  }
-
-  const length = Math.hypot(dx / rx, dy / ry);
-  if (length === 0) {
-    return { x: centerX, y: centerY };
-  }
-
-  return {
-    x: centerX + (dx / length),
-    y: centerY + (dy / length)
-  };
-}
-
-function projectToDiamond(
-  boundaryPoint: SysMLRoutePoint,
-  referencePoint: SysMLRoutePoint,
-  geom: NodeGeometry
-): SysMLRoutePoint {
-  const { centerX, centerY, width, height } = geom;
-  const dx = boundaryPoint.x - centerX;
-  const dy = boundaryPoint.y - centerY;
-
-  if (dx === 0 && dy === 0) {
-    return referencePoint;
-  }
-
-  const halfWidth = width / 2;
-  const halfHeight = height / 2;
-
-  const absDx = Math.abs(dx);
-  const absDy = Math.abs(dy);
-
-  const scale = (absDx / halfWidth) + (absDy / halfHeight);
-  if (scale === 0) {
-    return { x: centerX, y: centerY };
-  }
-
-  return {
-    x: centerX + (dx / scale),
-    y: centerY + (dy / scale)
-  };
-}
-
 function collectNodeGeometry(
   graph: ElkNode,
   geometry: Map<string, NodeGeometry>,
@@ -612,7 +467,6 @@ function collectNodeGeometry(
     const height = dimensions?.[child.id]?.height ?? child.height ?? opts.nodeHeight;
     const x = child.x ?? 0;
     const y = child.y ?? 0;
-    const kind = kinds.get(child.id);
 
     geometry.set(child.id, {
       x,
@@ -621,8 +475,7 @@ function collectNodeGeometry(
       height,
       centerX: x + width / 2,
       centerY: y + height / 2,
-      kind,
-      shape: getNodeShape(kind)
+      kind: kinds.get(child.id)
     });
 
     collectNodeGeometry(child, geometry, dimensions, kinds, opts);
@@ -671,8 +524,8 @@ export const recommendedLayouts: Record<string, LayoutOptions> = {
    */
   stateMachine: {
     algorithm: 'force',
-    nodeSpacing: 120,
-    layerSpacing: 120
+    nodeSpacing: 140,
+    layerSpacing: 140
   },
 
   /**
