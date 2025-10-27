@@ -13,7 +13,14 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "STATE_MACHINES.md",
+    "SEQUENCE_DIAGRAMS.md",
+    "LAYOUT.md",
+    "TEST_COVERAGE.md"
   ],
   "scripts": {
     "build": "tsup",
@@ -28,9 +35,22 @@
   },
   "keywords": [
     "sysml",
+    "sysml-v2",
     "reactflow",
+    "react-flow",
     "omg",
-    "diagrams"
+    "diagrams",
+    "systems-modeling",
+    "model-based-systems-engineering",
+    "mbse",
+    "requirements",
+    "block-diagram",
+    "state-machine",
+    "sequence-diagram",
+    "activity-diagram",
+    "visualization",
+    "automatic-layout",
+    "elkjs"
   ],
   "author": "SysML ReactFlow Contributors",
   "license": "MIT",
