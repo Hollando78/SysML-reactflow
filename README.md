@@ -229,6 +229,10 @@ Additional examples:
 - [`examples/state-machine.tsx`](examples/state-machine.tsx) - Complete state machine with transitions, guards, and actions
 - [`examples/sequence-diagram.tsx`](examples/sequence-diagram.tsx) - Interaction sequences with lifelines and messages
 - [`examples/automatic-layout.tsx`](examples/automatic-layout.tsx) - Automatic layout for different diagram types with interactive controls
+- [`examples/system-decomposition.tsx`](examples/system-decomposition.tsx) - Three-level decomposition of system, subsystem, and component parts
+- [`examples/component-interfaces.tsx`](examples/component-interfaces.tsx) - Component-level interface view with shared buses and flows
+- [`examples/requirements-schema.tsx`](examples/requirements-schema.tsx) - Requirement, constraint, analysis, and verification relationships
+- [`examples/functional-flow.tsx`](examples/functional-flow.tsx) - Functional activity flow with sequential and control links
 
 ## Documentation
 
