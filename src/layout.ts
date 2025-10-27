@@ -73,8 +73,8 @@ export interface LayoutOptions {
 const defaultOptions: Required<LayoutOptions> = {
   algorithm: 'layered',
   direction: 'DOWN',
-  nodeSpacing: 80,
-  layerSpacing: 100,
+  nodeSpacing: 100,
+  layerSpacing: 120,
   fitView: true,
   nodeWidth: 220,
   nodeHeight: 150
@@ -354,8 +354,8 @@ export const recommendedLayouts: Record<string, LayoutOptions> = {
   bdd: {
     algorithm: 'layered',
     direction: 'DOWN',
-    nodeSpacing: 100,
-    layerSpacing: 120
+    nodeSpacing: 140,
+    layerSpacing: 180
   },
 
   /**
@@ -375,8 +375,8 @@ export const recommendedLayouts: Record<string, LayoutOptions> = {
   requirements: {
     algorithm: 'layered',
     direction: 'DOWN',
-    nodeSpacing: 90,
-    layerSpacing: 110
+    nodeSpacing: 130,
+    layerSpacing: 160
   },
 
   /**
@@ -385,8 +385,8 @@ export const recommendedLayouts: Record<string, LayoutOptions> = {
    */
   stateMachine: {
     algorithm: 'force',
-    nodeSpacing: 120,
-    layerSpacing: 120
+    nodeSpacing: 160,
+    layerSpacing: 160
   },
 
   /**
@@ -396,8 +396,8 @@ export const recommendedLayouts: Record<string, LayoutOptions> = {
   activity: {
     algorithm: 'layered',
     direction: 'DOWN',
-    nodeSpacing: 70,
-    layerSpacing: 90
+    nodeSpacing: 110,
+    layerSpacing: 140
   },
 
   /**
@@ -406,8 +406,8 @@ export const recommendedLayouts: Record<string, LayoutOptions> = {
    */
   sequence: {
     algorithm: 'sequence',
-    nodeSpacing: 280,
-    layerSpacing: 100,
+    nodeSpacing: 320,
+    layerSpacing: 120,
     nodeWidth: 200,
     nodeHeight: 100
   },
