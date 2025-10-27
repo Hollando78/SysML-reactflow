@@ -275,6 +275,7 @@ const ActivityNode = memo((props: NodeProps<SysMLNodeData>) => {
         )}
         <CompartmentList compartments={data.compartments} />
       </NodeChrome>
+      <StandardHandles />
     </>
   );
 });
@@ -300,6 +301,7 @@ const ParametricNode = memo((props: NodeProps<SysMLNodeData>) => {
         )}
         <CompartmentList compartments={data.compartments} />
       </NodeChrome>
+      <StandardHandles />
     </>
   );
 });
@@ -311,6 +313,7 @@ const DefinitionNode = memo((props: NodeProps<SysMLNodeData>) => {
       <NodeChrome data={data}>
         <CompartmentList compartments={data.compartments} />
       </NodeChrome>
+      <StandardHandles />
     </>
   );
 });
@@ -348,6 +351,7 @@ const UseCaseNode = memo((props: NodeProps<SysMLNodeData>) => {
           <div style={{ fontSize: 12, marginTop: 8, opacity: 0.75 }}>{data.documentation}</div>
         )}
       </div>
+      <StandardHandles />
     </>
   );
 });
@@ -366,6 +370,7 @@ const StateNode = memo((props: NodeProps<SysMLNodeData>) => {
         </div>
         <CompartmentList compartments={data.compartments} />
       </NodeChrome>
+      <StandardHandles />
     </>
   );
 });
