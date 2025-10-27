@@ -93,6 +93,7 @@ interface NodeGeometry {
   height: number;
   centerX: number;
   centerY: number;
+  kind?: string;
 }
 
 /**
@@ -168,8 +169,13 @@ export async function applyLayout(
   // Run ELK layout
   const layoutedGraph = await elk.layout(elkGraph);
 
+  const kindMap = new Map<string, string>();
+  nodes.forEach((node) => {
+    kindMap.set(node.id, node.data.kind);
+  });
+
   const geometryMap = new Map<string, NodeGeometry>();
-  collectNodeGeometry(layoutedGraph, geometryMap, nodeDimensions, opts);
+  collectNodeGeometry(layoutedGraph, geometryMap, nodeDimensions, kindMap, opts);
 
   const routedEdges = extractEdgeRoutes(layoutedGraph, edgeRoutingModes, geometryMap);
 
@@ -380,16 +386,23 @@ function adjustSplineRoute(
 ): SysMLRoutePoint[] {
   const adjusted = points.map((pt) => ({ ...pt }));
 
-  if (source && adjusted.length >= 2) {
+  if (source && adjusted.length >= 2 && !isCircularKind(source.kind)) {
     adjusted[0] = projectToBoundary(adjusted[0], adjusted[1], source);
   }
 
-  if (target && adjusted.length >= 2) {
+  if (target && adjusted.length >= 2 && !isCircularKind(target.kind)) {
     const lastIndex = adjusted.length - 1;
     adjusted[lastIndex] = projectToBoundary(adjusted[lastIndex], adjusted[lastIndex - 1], target);
   }
 
   return adjusted;
+}
+
+function isCircularKind(kind?: string): boolean {
+  if (!kind) {
+    return false;
+  }
+  return kind === 'use-case-definition' || kind === 'use-case-usage';
 }
 
 function projectToBoundary(
@@ -442,6 +455,7 @@ function collectNodeGeometry(
   graph: ElkNode,
   geometry: Map<string, NodeGeometry>,
   dimensions: NodeDimensionMap | undefined,
+  kinds: Map<string, string>,
   opts: Required<LayoutOptions>
 ): void {
   graph.children?.forEach((child) => {
@@ -456,10 +470,11 @@ function collectNodeGeometry(
       width,
       height,
       centerX: x + width / 2,
-      centerY: y + height / 2
+      centerY: y + height / 2,
+      kind: kinds.get(child.id)
     });
 
-    collectNodeGeometry(child, geometry, dimensions, opts);
+    collectNodeGeometry(child, geometry, dimensions, kinds, opts);
   });
 }
 
