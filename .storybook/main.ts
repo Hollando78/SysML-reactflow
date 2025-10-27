@@ -15,6 +15,13 @@ const config: StorybookConfig = {
   "framework": {
     "name": "@storybook/react-vite",
     "options": {}
+  },
+  async viteFinal(config) {
+    // Set base path for GitHub Pages deployment
+    if (process.env.GITHUB_ACTIONS) {
+      config.base = '/SysML-reactflow/';
+    }
+    return config;
   }
 };
 export default config;
