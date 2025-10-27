@@ -1,5 +1,5 @@
 import { memo, type ComponentProps } from 'react';
-import ReactFlow, { Background, Controls, MiniMap } from 'reactflow';
+import ReactFlow, { Background, ConnectionMode, Controls, MiniMap } from 'reactflow';
 
 import { sysmlEdgeTypes, SysMLEdgeMarkersComponent } from './edges';
 import { sysmlNodeTypes } from './nodes';
@@ -41,6 +41,7 @@ export const SysMLDiagram = memo(
   }: SysMLDiagramProps) => {
     let resolvedNodes = nodes;
     let resolvedEdges = edges;
+    const { connectionMode, ...reactFlowProps } = rest;
 
     if (model && viewpoint) {
       const view = realizeViewpoint(model, viewpoint, viewOptions);
@@ -54,7 +55,8 @@ export const SysMLDiagram = memo(
 
     return (
       <ReactFlow
-        {...rest}
+        {...reactFlowProps}
+        connectionMode={connectionMode ?? ConnectionMode.Loose}
         fitView={fitView}
         nodes={resolvedNodes}
         edges={resolvedEdges}
