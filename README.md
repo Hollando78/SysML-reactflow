@@ -12,6 +12,7 @@
 - 🛠️ **Type-Safe Factories** - Strongly typed factory functions for all SysML v2 elements
 - 🗺️ **SysML v2 Viewpoints** - Built-in viewpoint system for diagram materialization
 - 🎨 **Professional Styling** - IBM Plex-based design with Definition/Usage badges and status indicators
+- 🤖 **Automatic Layout** - Powered by elkjs with optimized algorithms for each diagram type (layered, force-directed, tree, orthogonal, sequence)
 
 ### SysML v2.0 Element Coverage
 
@@ -147,6 +148,32 @@ export function Example() {
 }
 ```
 
+### Automatic Layout
+
+Apply automatic graph layout with optimized algorithms for different diagram types:
+
+```tsx
+import { applyRecommendedLayout } from 'sysml-reactflow';
+
+// Create nodes and edges
+const nodes = createNodesFromSpecs([...]);
+const edges = createEdgesFromRelationships([...]);
+
+// Apply automatic layout
+const layoutedNodes = await applyRecommendedLayout(nodes, edges, 'requirements');
+
+<SysMLDiagram nodes={layoutedNodes} edges={edges} fitView />
+```
+
+The library supports multiple layout algorithms:
+- **Layered (Hierarchical)** - For BDD, requirements, packages, activities
+- **Force-Directed** - For state machines, use cases
+- **Tree** - For package hierarchies
+- **Box (Orthogonal)** - For IBD, component compositions
+- **Sequence** - For sequence diagram lifelines
+
+See **[Layout Guide](LAYOUT.md)** for detailed documentation and examples.
+
 ## API surface
 
 ### Components
@@ -201,11 +228,13 @@ See [`examples/basic.tsx`](examples/basic.tsx) for a runnable snippet that assem
 Additional examples:
 - [`examples/state-machine.tsx`](examples/state-machine.tsx) - Complete state machine with transitions, guards, and actions
 - [`examples/sequence-diagram.tsx`](examples/sequence-diagram.tsx) - Interaction sequences with lifelines and messages
+- [`examples/automatic-layout.tsx`](examples/automatic-layout.tsx) - Automatic layout for different diagram types with interactive controls
 
 ## Documentation
 
-Comprehensive guides for specific diagram types:
+Comprehensive guides for specific features and diagram types:
 
+- **[Automatic Layout](LAYOUT.md)** - Complete guide to automatic graph layout with elkjs (layered, force, tree, box, sequence algorithms)
 - **[State Machines](STATE_MACHINES.md)** - Complete guide to modeling state machines with states, transitions, triggers, guards, and effects
 - **[Sequence Diagrams](SEQUENCE_DIAGRAMS.md)** - Complete guide to modeling interactions with lifelines, messages, and conditional flows
 
@@ -272,7 +301,6 @@ This library implements the **OMG Systems Modeling Language (SysML) v2.0** speci
 - **Visualization Focus:** This library provides visualization components, not a full authoring/editing environment
 - **No XMI/JSON Serialization:** Does not currently serialize to/from standard SysML v2 interchange formats
 - **Simplified Expressions:** Expression types (literal, invocation, feature reference) represented as strings
-- **No Layout Algorithm:** Automatic layout (ELK/Dagre integration) planned for future releases
 - **Read-Only Rendering:** Interactive editing and model manipulation not included
 
 For full SysML v2 authoring capabilities, consider tools built on the [Eclipse SysML v2 API](https://github.com/Systems-Modeling/SysML-v2-Release).
@@ -282,11 +310,11 @@ For full SysML v2 authoring capabilities, consider tools built on the [Eclipse S
 - ✅ ~~Complete SysML v2 element type coverage~~
 - ✅ ~~All definition/usage pairs~~
 - ✅ ~~Full relationship support~~
+- ✅ ~~Automatic layout with elkjs (layered, force, tree, box, sequence algorithms)~~
 - 🔲 SysML v2 JSON/XMI serialization support
 - 🔲 Expression metaclasses (LiteralExpression, InvocationExpression, FeatureReferenceExpression)
 - 🔲 Advanced feature relationships (FeatureValue, FeatureChaining visualization)
 - 🔲 Theme tokens + CSS variables for customization
-- 🔲 Automatic layout with `elkjs` or `dagre`
 - 🔲 Interactive editing capabilities
 - 🔲 Model validation against SysML v2 constraints
 

@@ -158,3 +158,11 @@ export type {
   SysMLDocumentationSpec
 } from './types';
 export type { SysMLModel, SysMLViewpoint, ViewMaterializationOptions } from './viewpoints';
+export {
+  applyLayout,
+  applyRecommendedLayout,
+  recommendedLayouts,
+  type LayoutOptions,
+  type LayoutAlgorithm,
+  type LayoutDirection
+} from './layout';
