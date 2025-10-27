@@ -19,6 +19,10 @@
     "build": "tsup",
     "dev": "tsup --watch --dts",
     "lint": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },
@@ -28,23 +32,40 @@
     "omg",
     "diagrams"
   ],
-  "author": "",
+  "author": "SysML ReactFlow Contributors",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Hollando78/SysML-reactflow.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Hollando78/SysML-reactflow/issues"
+  },
+  "homepage": "https://github.com/Hollando78/SysML-reactflow#readme",
   "devDependencies": {
+    "@chromatic-com/storybook": "^4.1.1",
+    "@storybook/addon-a11y": "^9.1.15",
+    "@storybook/addon-docs": "^9.1.15",
+    "@storybook/addon-onboarding": "^9.1.15",
+    "@storybook/addon-vitest": "^9.1.15",
+    "@storybook/react-vite": "^9.1.15",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
+    "@vitejs/plugin-react": "^5.1.0",
+    "@vitest/coverage-v8": "^4.0.3",
+    "@vitest/ui": "^4.0.3",
+    "happy-dom": "^20.0.8",
+    "jsdom": "^27.0.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "reactflow": "^11.11.4",
+    "storybook": "^9.1.15",
     "tsup": "^8.5.0",
     "typescript": "^5.9.3",
-    "storybook": "^9.1.15",
-    "@storybook/react-vite": "^9.1.15",
-    "@chromatic-com/storybook": "^4.1.1",
-    "@storybook/addon-docs": "^9.1.15",
-    "@storybook/addon-onboarding": "^9.1.15",
-    "@storybook/addon-a11y": "^9.1.15",
-    "@storybook/addon-vitest": "^9.1.15"
+    "vitest": "^4.0.3"
   },
   "peerDependencies": {
     "react": "^18.2.0 || ^19.0.0",

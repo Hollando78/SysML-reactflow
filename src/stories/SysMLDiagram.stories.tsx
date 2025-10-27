@@ -4,18 +4,21 @@ import type { XYPosition } from 'reactflow';
 import {
   SysMLDiagram,
   createActivityControlNode,
-  createActivityNode,
-  createBlockNode,
+  createActionDefinitionNode,
+  createActionUsageNode,
   createEdgesFromRelationships,
   createNodesFromSpecs,
-  createParametricNode,
-  createRequirementNode,
+  createConstraintDefinitionNode,
+  createRequirementUsageNode,
   createSequenceLifelineNode,
   createSequenceMessageEdge,
   createStateMachineNode,
   createStateNode,
   createStateTransitionEdge,
-  createUseCaseNode,
+  createUseCaseDefinitionNode,
+  createUseCaseUsageNode,
+  createPartDefinitionNode,
+  createPartUsageNode,
   type SysMLNodeSpec,
   type SysMLRelationshipSpec,
   structuralDefinitionViewpoint,
@@ -25,61 +28,48 @@ import {
 
 const nodeSpecs: SysMLNodeSpec[] = [
   {
-    kind: 'requirement',
+    kind: 'requirement-usage',
     spec: {
       id: 'REQ-001',
       name: 'Maintain Power',
       text: 'The spacecraft shall provide > 2kW continuous bus power.',
-      verification: 'analysis',
-      risk: 'high',
-      status: 'reviewed',
-      derivedFrom: ['MISSION-1'],
-      stereotype: 'requirement'
+      status: 'reviewed'
     }
   },
   {
-    kind: 'block-definition',
+    kind: 'part-definition',
     spec: {
       id: 'BLK-PCM',
       name: 'Power Conditioning Module',
-      stereotype: 'block',
       description: 'Manages battery charge/discharge and power routing.',
-      parts: [
+      attributes: [
         { name: 'batteryMgr', type: 'BatteryManager' },
-        { name: 'distribution', type: 'PowerDistribution' }
-      ],
-      values: [
-        { name: 'efficiency', value: '94%' },
-        { name: 'mass', value: '8.2 kg' }
+        { name: 'distribution', type: 'PowerDistribution' },
+        { name: 'efficiency', type: 'Real', value: '94%' },
+        { name: 'mass', type: 'Real', value: '8.2', multiplicity: '[kg]' }
       ],
       ports: [
         { name: 'busIn', direction: 'in', type: 'PowerFlow' },
         { name: 'busOut', direction: 'out', type: 'PowerFlow' }
-      ],
-      status: 'approved'
+      ]
     }
   },
   {
-    kind: 'activity',
+    kind: 'action-definition',
     spec: {
       id: 'ACT-001',
       name: 'Balance Loads',
-      actions: ['Observe telemetry', 'Predict load', 'Command switches'],
+      description: 'Observes telemetry, predicts load, and commands switches',
       inputs: [{ name: 'telemetry', type: 'PowerTelemetry' }],
-      outputs: [{ name: 'commands', type: 'SwitchCommand' }],
-      status: 'draft'
+      outputs: [{ name: 'commands', type: 'SwitchCommand' }]
     }
   },
   {
-    kind: 'parametric',
+    kind: 'constraint-definition',
     spec: {
       id: 'PAR-001',
       name: 'LoadConstraint',
-      equation: 'sum(load_i) <= 0.9 * capacity',
-      parameters: [
-        { name: 'load_i', type: 'kW' },
-        { name: 'capacity', type: 'kW' }
-      ]
+      description: 'sum(load_i) <= 0.9 * capacity'
     }
   }
 ];
@@ -116,9 +106,7 @@ const definitionUsageSpecs: SysMLNodeSpec[] = [
       ports: [
         { name: 'fuelCmdPort', direction: 'in', type: 'FuelCmd' },
         { name: 'vehicleRoadPort', direction: 'inout', type: 'RoadContact' }
-      ],
-      actions: ['providePower', 'provideBraking'],
-      states: ['vehicleStates']
+      ]
     }
   },
   {
@@ -136,8 +124,7 @@ const definitionUsageSpecs: SysMLNodeSpec[] = [
       id: 'vehicle_b',
       name: 'vehicle_b:Vehicle',
       definition: 'Vehicle',
-      redefines: ['mass', 'dryMass'],
-      attributes: [{ name: 'dryMass', value: '1200 [kg]' }],
+      attributes: [{ name: 'dryMass', type: 'Real', value: '1200', multiplicity: '[kg]' }],
       ports: [
         { name: 'fuelCmdPort', direction: 'in', type: 'FuelCmd' },
         { name: 'vehicleRoadPort', direction: 'inout', type: 'RoadContact' }
@@ -232,26 +219,26 @@ const bddGraph = (() => {
   const nodes = createNodesFromSpecs(
     [
       {
-        kind: 'block-definition',
+        kind: 'part-definition',
         spec: {
           id: 'BLK-Power',
           name: 'PowerController',
           description: 'Coordinates distribution logic.',
-          parts: [
+          attributes: [
             { name: 'batteryMgr', type: 'BatteryManager' },
-            { name: 'telemetryBus', type: 'DataBus' }
-          ],
-          values: [{ name: 'priority', value: 'critical' }]
+            { name: 'telemetryBus', type: 'DataBus' },
+            { name: 'priority', type: 'String', value: 'critical' }
+          ]
         }
       },
       {
-        kind: 'block-definition',
+        kind: 'part-definition',
         spec: {
           id: 'BLK-Battery',
           name: 'BatteryModule',
           description: 'Provides stored energy.',
-          parts: [
-            { name: 'cells', type: 'Li-IonPack', multiplicity: '8' },
+          attributes: [
+            { name: 'cells', type: 'Li-IonPack', multiplicity: '[8]' },
             { name: 'heater', type: 'ThermalLoop' }
           ],
           ports: [{ name: 'powerOut', direction: 'out', type: '28V' }]
@@ -272,45 +259,50 @@ const bddGraph = (() => {
 })();
 
 const ibdGraph = (() => {
-  const controller = createBlockNode(
+  const nodes = createNodesFromSpecs(
+    [
+      {
+        kind: 'part-usage',
+        spec: {
+          id: 'IBD-CONTROLLER',
+          name: 'Controller',
+          attributes: [
+            { name: 'psu', type: 'PowerSupply' },
+            { name: 'swMatrix', type: 'SwitchMatrix' }
+          ],
+          ports: [
+            { name: 'powerIn', direction: 'in', type: '28V' },
+            { name: 'powerOut', direction: 'out', type: '28V' }
+          ]
+        }
+      },
+      {
+        kind: 'part-usage',
+        spec: {
+          id: 'IBD-PAYLOAD',
+          name: 'PayloadBay',
+          ports: [
+            { name: 'powerIn', direction: 'in', type: '28V' },
+            { name: 'telemetry', direction: 'out', type: 'CAN' }
+          ]
+        }
+      },
+      {
+        kind: 'action-usage',
+        spec: {
+          id: 'IBD-MON',
+          name: 'MonitorLoads',
+          description: 'Measures currents and reports anomalies',
+          inputs: [{ name: 'telemetry', type: 'CAN' }],
+          outputs: [{ name: 'alerts', type: 'Event' }]
+        }
+      }
+    ],
     {
-      id: 'IBD-CONTROLLER',
-      name: 'Controller',
-      parts: [
-        { name: 'psu', type: 'PowerSupply' },
-        { name: 'swMatrix', type: 'SwitchMatrix' }
-      ],
-      ports: [
-        { name: 'powerIn', direction: 'in', type: '28V' },
-        { name: 'powerOut', direction: 'out', type: '28V' }
-      ]
-    },
-    { x: 0, y: 40 },
-    'internal-block'
-  );
-
-  const payload = createBlockNode(
-    {
-      id: 'IBD-PAYLOAD',
-      name: 'PayloadBay',
-      ports: [
-        { name: 'powerIn', direction: 'in', type: '28V' },
-        { name: 'telemetry', direction: 'out', type: 'CAN' }
-      ]
-    },
-    { x: 380, y: 60 },
-    'internal-block'
-  );
-
-  const monitor = createActivityNode(
-    {
-      id: 'IBD-MON',
-      name: 'MonitorLoads',
-      actions: ['Measure currents', 'Report anomalies'],
-      inputs: [{ name: 'telemetry', type: 'CAN' }],
-      outputs: [{ name: 'alerts', type: 'Event' }]
-    },
-    { x: 760, y: 140 }
+      'IBD-CONTROLLER': { x: 0, y: 40 },
+      'IBD-PAYLOAD': { x: 380, y: 60 },
+      'IBD-MON': { x: 760, y: 140 }
+    }
   );
 
   const edges = createEdgesFromRelationships([
@@ -318,50 +310,51 @@ const ibdGraph = (() => {
     { id: 'ibd-dep', type: 'dependency', source: 'IBD-CONTROLLER', target: 'IBD-PAYLOAD', label: 'feeds' }
   ]);
 
-  return { nodes: [controller, payload, monitor], edges };
+  return { nodes, edges };
 })();
 
 const useCaseGraph = (() => {
-  const operator = createRequirementNode(
+  const nodes = createNodesFromSpecs(
+    [
+      {
+        kind: 'use-case-definition',
+        spec: {
+          id: 'ACT-Operator',
+          name: 'Operator',
+          description: 'Ground operator interacts with the power system.'
+        }
+      },
+      {
+        kind: 'use-case-usage',
+        spec: {
+          id: 'UC-Manage',
+          name: 'Manage Power',
+          description: 'Configure loads and review reports.'
+        }
+      },
+      {
+        kind: 'use-case-usage',
+        spec: {
+          id: 'UC-Log',
+          name: 'Log Telemetry',
+          description: 'Persist all power events.'
+        }
+      },
+      {
+        kind: 'use-case-usage',
+        spec: {
+          id: 'UC-Recover',
+          name: 'Recover From Fault',
+          description: 'Isolate bad branches and restore nominal ops.'
+        }
+      }
+    ],
     {
-      id: 'ACT-Operator',
-      name: 'Operator',
-      stereotype: 'actor',
-      text: 'Ground operator interacts with the power system.'
-    },
-    { x: -120, y: 40 }
-  );
-
-  const managePower = createUseCaseNode(
-    {
-      id: 'UC-Manage',
-      name: 'Manage Power',
-      description: 'Configure loads and review reports.',
-      actors: ['Operator'],
-      includes: ['Log Telemetry']
-    },
-    { x: 200, y: 20 }
-  );
-
-  const logTelemetry = createUseCaseNode(
-    {
-      id: 'UC-Log',
-      name: 'Log Telemetry',
-      description: 'Persist all power events.',
-      actors: ['Operator']
-    },
-    { x: 520, y: 100 }
-  );
-
-  const recover = createUseCaseNode(
-    {
-      id: 'UC-Recover',
-      name: 'Recover From Fault',
-      description: 'Isolate bad branches and restore nominal ops.',
-      actors: ['Operator'],
-      extends: ['Manage Power']
-    },
-    { x: 200, y: 260 }
+      'ACT-Operator': { x: -120, y: 40 },
+      'UC-Manage': { x: 200, y: 20 },
+      'UC-Log': { x: 520, y: 100 },
+      'UC-Recover': { x: 200, y: 260 }
+    }
   );
 
   const edges = createEdgesFromRelationships([
@@ -370,7 +363,7 @@ const useCaseGraph = (() => {
     { id: 'uc-actor', type: 'dependency', source: 'ACT-Operator', target: 'UC-Manage', label: 'interacts' }
   ]);
 
-  return { nodes: [operator, managePower, logTelemetry, recover], edges };
+  return { nodes, edges };
 })();
 
 const stateMachineGraph = (() => {
@@ -446,15 +439,15 @@ const stateMachineGraph = (() => {
 
 const sequenceGraph = (() => {
   const controller = createSequenceLifelineNode(
-    { id: 'SEQ-CTRL', name: 'Controller', classifier: 'BlockDefinition::Controller' },
+    { id: 'SEQ-CTRL', name: 'Controller', classifier: 'PartDefinition::Controller' },
     { x: 0, y: 0 }
   );
   const pcm = createSequenceLifelineNode(
-    { id: 'SEQ-PCM', name: 'PCM', classifier: 'BlockDefinition::PCM' },
+    { id: 'SEQ-PCM', name: 'PCM', classifier: 'PartDefinition::PCM' },
     { x: 260, y: 0 }
   );
   const load = createSequenceLifelineNode(
-    { id: 'SEQ-LOAD', name: 'Load', classifier: 'BlockDefinition::Load' },
+    { id: 'SEQ-LOAD', name: 'Load', classifier: 'PartDefinition::Load' },
     { x: 520, y: 0 }
   );
 
@@ -487,14 +480,59 @@ const sequenceGraph = (() => {
 })();
 
 const activityGraph = (() => {
-  const init = createActivityNode(
+  const nodes = createNodesFromSpecs(
+    [
+      {
+        kind: 'action-usage',
+        spec: {
+          id: 'ACT-Init',
+          name: 'Initialize',
+          description: 'Boot subsystems',
+          outputs: [{ name: 'ready', type: 'Signal' }]
+        }
+      },
+      {
+        kind: 'action-usage',
+        spec: {
+          id: 'ACT-Config',
+          name: 'Configure Loads',
+          description: 'Resolve priorities',
+          inputs: [{ name: 'ready', type: 'Signal' }]
+        }
+      },
+      {
+        kind: 'action-usage',
+        spec: {
+          id: 'ACT-Monitor',
+          name: 'Monitor Current',
+          description: 'Sample sensors',
+          outputs: [{ name: 'currents', type: 'Telemetry' }]
+        }
+      },
+      {
+        kind: 'action-usage',
+        spec: {
+          id: 'ACT-Recover',
+          name: 'Recover Fault',
+          description: 'Isolate branch and notify ground'
+        }
+      },
+      {
+        kind: 'action-usage',
+        spec: {
+          id: 'ACT-Shutdown',
+          name: 'Shutdown',
+          description: 'Deactivate loads'
+        }
+      }
+    ],
     {
-      id: 'ACT-Init',
-      name: 'Initialize',
-      actions: ['Boot subsystems'],
-      outputs: [{ name: 'ready', type: 'Signal' }]
-    },
-    { x: -100, y: 0 }
+      'ACT-Init': { x: -100, y: 0 },
+      'ACT-Config': { x: 380, y: -80 },
+      'ACT-Monitor': { x: 380, y: 120 },
+      'ACT-Recover': { x: 860, y: 180 },
+      'ACT-Shutdown': { x: 1280, y: 40 }
+    }
   );
 
   const fork = createActivityControlNode(
@@ -502,38 +540,9 @@ const activityGraph = (() => {
     { x: 180, y: 40 }
   );
 
-  const configure = createActivityNode(
-    {
-      id: 'ACT-Config',
-      name: 'Configure Loads',
-      actions: ['Resolve priorities'],
-      inputs: [{ name: 'ready', type: 'Signal' }]
-    },
-    { x: 380, y: -80 }
-  );
-
-  const monitor = createActivityNode(
-    {
-      id: 'ACT-Monitor',
-      name: 'Monitor Current',
-      actions: ['Sample sensors'],
-      outputs: [{ name: 'currents', type: 'Telemetry' }]
-    },
-    { x: 380, y: 120 }
-  );
-
   const decision = createActivityControlNode(
     { id: 'ACT-Decision', name: 'Decision', controlType: 'decision' },
     { x: 620, y: 40 }
-  );
-
-  const recover = createActivityNode(
-    {
-      id: 'ACT-Recover',
-      name: 'Recover Fault',
-      actions: ['Isolate branch', 'Notify ground']
-    },
-    { x: 860, y: 180 }
   );
 
   const merge = createActivityControlNode(
@@ -544,15 +553,6 @@ const activityGraph = (() => {
   const join = createActivityControlNode(
     { id: 'ACT-Join', name: 'Join', controlType: 'join' },
     { x: 1080, y: 40 }
-  );
-
-  const shutdown = createActivityNode(
-    {
-      id: 'ACT-Shutdown',
-      name: 'Shutdown',
-      actions: ['Deactivate loads']
-    },
-    { x: 1280, y: 40 }
   );
 
   const edges = createEdgesFromRelationships([
@@ -569,7 +569,7 @@ const activityGraph = (() => {
   ]);
 
   return {
-    nodes: [init, fork, configure, monitor, decision, recover, merge, join, shutdown],
+    nodes: [...nodes, fork, decision, merge, join],
     edges
   };
 })();
@@ -578,6 +578,7 @@ const definitionUsageGraph = (() => ({
   nodes: createNodesFromSpecs(definitionUsageSpecs, definitionUsagePositions),
   edges: createEdgesFromRelationships(definitionUsageRelationships)
 }))();
+
 const meta = {
   title: 'SysML/SysMLDiagram',
   component: SysMLDiagram,
@@ -611,7 +612,7 @@ export const BlockDefinitionDiagram: Story = {
   args: bddGraph,
   parameters: {
     docs: {
-      description: { story: 'Block definition relationships between controller and battery modules.' }
+      description: { story: 'Part definition relationships between controller and battery modules.' }
     }
   }
 };

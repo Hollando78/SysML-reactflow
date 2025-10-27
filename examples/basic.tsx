@@ -4,27 +4,23 @@ import { SysMLDiagram, createEdgesFromRelationships, createNodesFromSpecs } from
 
 const nodes = createNodesFromSpecs([
   {
-    kind: 'requirement',
+    kind: 'requirement-usage',
     spec: {
       id: 'REQ-1',
       name: 'Mission Reliability',
       text: 'The system shall maintain 99.95% availability.',
-      risk: 'high',
-      verification: 'analysis',
-      status: 'reviewed',
-      derivedFrom: ['CONOPS-1']
+      status: 'reviewed'
     }
   },
   {
-    kind: 'block-definition',
+    kind: 'part-definition',
     spec: {
-      id: 'BLK-1',
+      id: 'PART-1',
       name: 'PowerController',
-      stereotype: 'block',
       description: 'Supervises power switching fabrics.',
-      parts: [
+      attributes: [
         { name: 'batteryMgr', type: 'BatteryManager' },
-        { name: 'psu', type: 'PowerSupply', multiplicity: '2..3' }
+        { name: 'psu', type: 'PowerSupply', multiplicity: '[2..3]' }
       ],
       ports: [
         { name: 'powerIn', type: '28V', direction: 'in' },
@@ -33,33 +29,27 @@ const nodes = createNodesFromSpecs([
     }
   },
   {
-    kind: 'activity',
+    kind: 'action-definition',
     spec: {
       id: 'ACT-1',
       name: 'DistributePower',
-      actions: ['Check loads', 'Balance feeders', 'Report status'],
-      inputs: [{ name: 'powerIn', type: 'PowerFlow' }],
-      outputs: [{ name: 'powerOut', type: 'PowerFlow' }]
+      description: 'Distributes power across system loads'
     }
   },
   {
-    kind: 'parametric',
+    kind: 'constraint-definition',
     spec: {
-      id: 'PAR-1',
+      id: 'CONST-1',
       name: 'LoadBalanceConstraint',
-      equation: 'totalLoad <= supplyCapacity',
-      parameters: [
-        { name: 'totalLoad', type: 'kW' },
-        { name: 'supplyCapacity', type: 'kW' }
-      ]
+      description: 'Ensures total load does not exceed supply capacity'
     }
   }
 ]);
 
 const edges = createEdgesFromRelationships([
-  { id: 'rel-1', type: 'satisfy', source: 'BLK-1', target: 'REQ-1', label: 'satisfy' },
-  { id: 'rel-2', type: 'allocate', source: 'BLK-1', target: 'ACT-1', label: 'allocate' },
-  { id: 'rel-3', type: 'refine', source: 'ACT-1', target: 'PAR-1', label: 'refine' }
+  { id: 'rel-1', type: 'satisfy', source: 'PART-1', target: 'REQ-1', label: 'satisfy' },
+  { id: 'rel-2', type: 'allocate', source: 'PART-1', target: 'ACT-1', label: 'allocate' },
+  { id: 'rel-3', type: 'refine', source: 'ACT-1', target: 'CONST-1', label: 'refine' }
 ]);
 
 export const BasicSysMLDiagram = () => (

@@ -5,24 +5,68 @@ import { Handle, Position } from 'reactflow';
 import type { SysMLCompartment, SysMLNodeData } from './types';
 
 const accentByKind: Record<string, string> = {
-  requirement: '#0F62FE',
-  'block-definition': '#8A3FFC',
-  'internal-block': '#6929C4',
-  activity: '#24A148',
-  parametric: '#FF832B',
-  'use-case': '#FFB000',
+  // Base node types (used in factories)
   state: '#33B1FF',
   'state-machine': '#3DDBD9',
   'sequence-lifeline': '#F1C21B',
   'activity-control': '#E0E0E0',
+  // Structural
   'part-definition': '#4589FF',
   'part-usage': '#0F62FE',
-  'action-definition': '#FF7EB6',
-  'action-usage': '#FFB3B8',
+  'attribute-definition': '#6929C4',
+  'attribute-usage': '#8A3FFC',
   'port-definition': '#08BDBA',
   'port-usage': '#1192E8',
   'item-definition': '#BA4E00',
-  'item-usage': '#FF832B'
+  'item-usage': '#FF832B',
+  'connection-definition': '#A56EFF',
+  'connection-usage': '#BE95FF',
+  'interface-definition': '#0072C3',
+  'interface-usage': '#1192E8',
+  'allocation-definition': '#FA4D56',
+  'allocation-usage': '#FF8389',
+  'reference-usage': '#D02670',
+  'occurrence-definition': '#D12765',
+  'occurrence-usage': '#FF7EB6',
+  // Behavioral
+  'action-definition': '#FF7EB6',
+  'action-usage': '#FFB3B8',
+  'calculation-definition': '#198038',
+  'calculation-usage': '#24A148',
+  'perform-action': '#6FDC8C',
+  'send-action': '#007D79',
+  'accept-action': '#005D5D',
+  'assignment-action': '#9EF0F0',
+  'if-action': '#FFD6E8',
+  'for-loop-action': '#D6E6FF',
+  'while-loop-action': '#BAE6FF',
+  'state-definition': '#0043CE',
+  'state-usage': '#33B1FF',
+  'transition-usage': '#82CFFF',
+  'exhibit-state': '#D0E2FF',
+  // Requirements & Cases
+  'requirement-definition': '#0043CE',
+  'requirement-usage': '#0F62FE',
+  'constraint-definition': '#FA4D56',
+  'constraint-usage': '#FF8389',
+  'verification-case-definition': '#198038',
+  'verification-case-usage': '#24A148',
+  'analysis-case-definition': '#8A3800',
+  'analysis-case-usage': '#FF832B',
+  'use-case-definition': '#B28600',
+  'use-case-usage': '#FFB000',
+  'concern-definition': '#9F1853',
+  'concern-usage': '#D02670',
+  // Organizational
+  package: '#6929C4',
+  'library-package': '#8A3FFC',
+  // Interactions
+  interaction: '#EE5396',
+  // Metadata
+  'metadata-definition': '#525252',
+  'metadata-usage': '#8D8D8D',
+  comment: '#A8A8A8',
+  documentation: '#C6C6C6'
 };
 
 const statusColor: Record<NonNullable<SysMLNodeData['status']>, string> = {
@@ -433,22 +477,66 @@ const ActivityControlNode = memo((props: NodeProps<SysMLNodeData>) => {
 });
 
 export const sysmlNodeTypes: NodeTypes = {
-  'sysml.requirement': RequirementNode,
-  'sysml.block': BlockNode,
-  'sysml.internal-block': BlockNode,
-  'sysml.activity': ActivityNode,
-  'sysml.parametric': ParametricNode,
-  'sysml.use-case': UseCaseNode,
+  // Base node types (still used in some factories)
   'sysml.state': StateNode,
   'sysml.state-machine': StateMachineNode,
   'sysml.sequence-lifeline': SequenceLifelineNode,
   'sysml.activity-control': ActivityControlNode,
+  // Structural elements
   'sysml.part-definition': DefinitionNode,
   'sysml.part-usage': DefinitionNode,
-  'sysml.action-definition': DefinitionNode,
-  'sysml.action-usage': DefinitionNode,
+  'sysml.attribute-definition': DefinitionNode,
+  'sysml.attribute-usage': DefinitionNode,
   'sysml.port-definition': DefinitionNode,
   'sysml.port-usage': DefinitionNode,
   'sysml.item-definition': DefinitionNode,
-  'sysml.item-usage': DefinitionNode
+  'sysml.item-usage': DefinitionNode,
+  'sysml.connection-definition': DefinitionNode,
+  'sysml.connection-usage': DefinitionNode,
+  'sysml.interface-definition': DefinitionNode,
+  'sysml.interface-usage': DefinitionNode,
+  'sysml.allocation-definition': DefinitionNode,
+  'sysml.allocation-usage': DefinitionNode,
+  'sysml.reference-usage': DefinitionNode,
+  'sysml.occurrence-definition': DefinitionNode,
+  'sysml.occurrence-usage': DefinitionNode,
+  // Behavioral elements
+  'sysml.action-definition': DefinitionNode,
+  'sysml.action-usage': DefinitionNode,
+  'sysml.calculation-definition': DefinitionNode,
+  'sysml.calculation-usage': DefinitionNode,
+  'sysml.perform-action': ActivityNode,
+  'sysml.send-action': ActivityNode,
+  'sysml.accept-action': ActivityNode,
+  'sysml.assignment-action': ActivityNode,
+  'sysml.if-action': ActivityNode,
+  'sysml.for-loop-action': ActivityNode,
+  'sysml.while-loop-action': ActivityNode,
+  'sysml.state-definition': StateNode,
+  'sysml.state-usage': StateNode,
+  'sysml.transition-usage': StateNode,
+  'sysml.exhibit-state': StateNode,
+  // Requirements & Cases
+  'sysml.requirement-definition': RequirementNode,
+  'sysml.requirement-usage': RequirementNode,
+  'sysml.constraint-definition': ParametricNode,
+  'sysml.constraint-usage': ParametricNode,
+  'sysml.verification-case-definition': RequirementNode,
+  'sysml.verification-case-usage': RequirementNode,
+  'sysml.analysis-case-definition': ActivityNode,
+  'sysml.analysis-case-usage': ActivityNode,
+  'sysml.use-case-definition': UseCaseNode,
+  'sysml.use-case-usage': UseCaseNode,
+  'sysml.concern-definition': RequirementNode,
+  'sysml.concern-usage': RequirementNode,
+  // Organizational
+  'sysml.package': BlockNode,
+  'sysml.library-package': BlockNode,
+  // Interactions
+  'sysml.interaction': SequenceLifelineNode,
+  // Metadata
+  'sysml.metadata-definition': DefinitionNode,
+  'sysml.metadata-usage': DefinitionNode,
+  'sysml.comment': DefinitionNode,
+  'sysml.documentation': DefinitionNode
 };
