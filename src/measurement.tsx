@@ -31,15 +31,18 @@ export async function measureNodeDimensions(nodes: SysMLReactFlowNode[]): Promis
   if (fontSet && fontSet.ready) {
     try {
       await fontSet.ready;
+      // Additional delay to ensure font metrics are applied
+      await new Promise(resolve => setTimeout(resolve, 50));
     } catch {
       // Ignore font loading errors, fall back to current metrics
     }
   }
 
   // Clone nodes so React Flow measurement does not mutate caller state
-  const measurementNodes: SysMLReactFlowNode[] = nodes.map((node) => ({
+  // Spread nodes apart to avoid overlap during measurement
+  const measurementNodes: SysMLReactFlowNode[] = nodes.map((node, index) => ({
     ...node,
-    position: node.position ? { ...node.position } : { x: 0, y: 0 },
+    position: { x: (index % 5) * 300, y: Math.floor(index / 5) * 200 },
     data: node.data
   }));
 
@@ -80,18 +83,26 @@ export async function measureNodeDimensions(nodes: SysMLReactFlowNode[]): Promis
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
-            const map: MeasuredNodeMap = {};
+            // Force reflow to ensure layout is complete
+            container.offsetHeight;
 
-            nodes.forEach((node) => {
-              const selector = `[data-id="${CSS_ESCAPE(node.id)}"]`;
-              const el = container.querySelector(selector);
-              if (el instanceof HTMLElement) {
-                const rect = el.getBoundingClientRect();
-                map[node.id] = { width: rect.width, height: rect.height };
-              }
-            });
+            // Additional delay to ensure all rendering is complete
+            setTimeout(() => {
+              const map: MeasuredNodeMap = {};
 
-            resolve(map);
+              nodes.forEach((node) => {
+                const selector = `[data-id="${CSS_ESCAPE(node.id)}"]`;
+                const el = container.querySelector(selector);
+                if (el instanceof HTMLElement) {
+                  // Force reflow on each element
+                  el.offsetHeight;
+                  const rect = el.getBoundingClientRect();
+                  map[node.id] = { width: rect.width, height: rect.height };
+                }
+              });
+
+              resolve(map);
+            }, 50);
           });
         });
       });
