@@ -6,9 +6,7 @@ import 'reactflow/dist/style.css';
 
 const withReactFlow: Decorator = (Story) => (
   <ReactFlowProvider>
-    <div style={{ width: '100%', height: '600px', background: '#0b0c0f' }}>
-      <Story />
-    </div>
+    <Story />
   </ReactFlowProvider>
 );
 

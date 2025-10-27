@@ -1,700 +1,636 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import type { XYPosition } from 'reactflow';
-
+import { useEffect, useState } from 'react';
+import { ReactFlowProvider } from 'reactflow';
 import {
   SysMLDiagram,
-  createActivityControlNode,
-  createActionDefinitionNode,
-  createActionUsageNode,
-  createEdgesFromRelationships,
   createNodesFromSpecs,
-  createConstraintDefinitionNode,
-  createRequirementUsageNode,
+  createEdgesFromRelationships,
+  applyRecommendedLayout,
   createSequenceLifelineNode,
   createSequenceMessageEdge,
-  createStateMachineNode,
   createStateNode,
   createStateTransitionEdge,
-  createUseCaseDefinitionNode,
-  createUseCaseUsageNode,
-  createPartDefinitionNode,
-  createPartUsageNode,
   type SysMLNodeSpec,
   type SysMLRelationshipSpec,
-  structuralDefinitionViewpoint,
-  usageStructureViewpoint,
-  type SysMLModel
+  type SysMLReactFlowNode,
+  type SysMLReactFlowEdge
 } from '../index';
 
-const nodeSpecs: SysMLNodeSpec[] = [
+/**
+ * SysML v2.0 Diagram Visualization
+ *
+ * This library provides React components for visualizing SysML v2.0 diagrams
+ * with automatic layout and comprehensive element support.
+ *
+ * Features:
+ * - 60+ SysML v2.0 element types
+ * - Automatic graph layout (5 algorithms)
+ * - Light and dark mode support
+ * - Type-safe TypeScript APIs
+ */
+const meta = {
+  title: 'SysML v2.0 Diagrams',
+  component: SysMLDiagram,
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        component: 'Interactive SysML v2.0 diagram visualization powered by React Flow with automatic layout capabilities.'
+      }
+    }
+  },
+  tags: ['autodocs']
+} satisfies Meta<typeof SysMLDiagram>;
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+// Helper component for auto-layout stories
+const AutoLayoutStory = ({
+  specs,
+  relationships,
+  diagramType,
+  background = 'light'
+}: {
+  specs: SysMLNodeSpec[];
+  relationships: SysMLRelationshipSpec[];
+  diagramType: 'bdd' | 'requirements' | 'stateMachine' | 'activity' | 'sequence';
+  background?: 'light' | 'dark';
+}) => {
+  const [nodes, setNodes] = useState<SysMLReactFlowNode[]>([]);
+  const [edges, setEdges] = useState<SysMLReactFlowEdge[]>([]);
+
+  useEffect(() => {
+    async function layout() {
+      const initialNodes = createNodesFromSpecs(specs);
+      const initialEdges = createEdgesFromRelationships(relationships);
+      const layoutedNodes = await applyRecommendedLayout(initialNodes, initialEdges, diagramType);
+      setNodes(layoutedNodes);
+      setEdges(initialEdges);
+    }
+    layout();
+  }, [specs, relationships, diagramType]);
+
+  return (
+    <ReactFlowProvider>
+      <div style={{
+        width: '100%',
+        height: '100vh',
+        background: background === 'dark' ? '#0b0c0f' : '#ffffff'
+      }}>
+        <SysMLDiagram nodes={nodes} edges={edges} fitView />
+      </div>
+    </ReactFlowProvider>
+  );
+};
+
+// ============================================================================
+// Block Definition Diagram (BDD) - Structural Hierarchy
+// ============================================================================
+
+const bddSpecs: SysMLNodeSpec[] = [
   {
-    kind: 'requirement-usage',
+    kind: 'part-definition',
     spec: {
-      id: 'REQ-001',
-      name: 'Maintain Power',
-      text: 'The spacecraft shall provide > 2kW continuous bus power.',
-      status: 'reviewed'
+      id: 'vehicle',
+      name: 'Vehicle',
+      description: 'Electric vehicle system',
+      attributes: [
+        { name: 'mass', type: 'Real', multiplicity: '[kg]' },
+        { name: 'range', type: 'Real', multiplicity: '[km]' }
+      ]
     }
   },
   {
     kind: 'part-definition',
     spec: {
-      id: 'BLK-PCM',
-      name: 'Power Conditioning Module',
-      description: 'Manages battery charge/discharge and power routing.',
+      id: 'powertrain',
+      name: 'Powertrain',
+      description: 'Electric propulsion system',
       attributes: [
-        { name: 'batteryMgr', type: 'BatteryManager' },
-        { name: 'distribution', type: 'PowerDistribution' },
-        { name: 'efficiency', type: 'Real', value: '94%' },
-        { name: 'mass', type: 'Real', value: '8.2', multiplicity: '[kg]' }
-      ],
-      ports: [
-        { name: 'busIn', direction: 'in', type: 'PowerFlow' },
-        { name: 'busOut', direction: 'out', type: 'PowerFlow' }
+        { name: 'maxPower', type: 'Real', multiplicity: '[kW]' }
       ]
     }
   },
   {
-    kind: 'action-definition',
+    kind: 'part-definition',
     spec: {
-      id: 'ACT-001',
-      name: 'Balance Loads',
-      description: 'Observes telemetry, predicts load, and commands switches',
-      inputs: [{ name: 'telemetry', type: 'PowerTelemetry' }],
-      outputs: [{ name: 'commands', type: 'SwitchCommand' }]
+      id: 'battery',
+      name: 'BatteryPack',
+      description: 'Energy storage system',
+      attributes: [
+        { name: 'capacity', type: 'Real', multiplicity: '[kWh]' },
+        { name: 'voltage', type: 'Real', multiplicity: '[V]' }
+      ]
     }
   },
   {
-    kind: 'constraint-definition',
+    kind: 'part-definition',
     spec: {
-      id: 'PAR-001',
-      name: 'LoadConstraint',
-      description: 'sum(load_i) <= 0.9 * capacity'
+      id: 'motor',
+      name: 'ElectricMotor',
+      description: 'Propulsion motor',
+      attributes: [
+        { name: 'power', type: 'Real', multiplicity: '[kW]' },
+        { name: 'torque', type: 'Real', multiplicity: '[Nm]' }
+      ]
+    }
+  },
+  {
+    kind: 'part-definition',
+    spec: {
+      id: 'controller',
+      name: 'MotorController',
+      description: 'Power electronics',
+      attributes: [
+        { name: 'efficiency', type: 'Real', multiplicity: '[%]' }
+      ]
     }
   }
 ];
 
-const relationshipSpecs: SysMLRelationshipSpec[] = [
-  { id: 'edge-req', type: 'satisfy', source: 'BLK-PCM', target: 'REQ-001', label: 'satisfy' },
-  { id: 'edge-alloc', type: 'allocate', source: 'BLK-PCM', target: 'ACT-001', label: 'allocate' },
-  { id: 'edge-refine', type: 'refine', source: 'ACT-001', target: 'PAR-001', label: 'refine' }
+const bddRelationships: SysMLRelationshipSpec[] = [
+  { id: 'e1', type: 'composition', source: 'vehicle', target: 'powertrain', label: 'contains' },
+  { id: 'e2', type: 'composition', source: 'powertrain', target: 'battery', label: 'contains' },
+  { id: 'e3', type: 'composition', source: 'powertrain', target: 'motor', label: 'contains' },
+  { id: 'e4', type: 'composition', source: 'powertrain', target: 'controller', label: 'contains' }
 ];
 
-const positions = {
-  'REQ-001': { x: 0, y: 0 },
-  'BLK-PCM': { x: 320, y: 80 },
-  'ACT-001': { x: 640, y: 160 },
-  'PAR-001': { x: 960, y: 80 }
+export const BlockDefinitionDiagram_Light: Story = {
+  render: () => <AutoLayoutStory specs={bddSpecs} relationships={bddRelationships} diagramType="bdd" background="light" />,
+  parameters: {
+    docs: {
+      description: {
+        story: 'Block Definition Diagram showing vehicle system hierarchy with automatic hierarchical layout. Light mode.'
+      }
+    }
+  }
 };
 
-const createGraph = () => ({
-  nodes: createNodesFromSpecs(nodeSpecs, positions),
-  edges: createEdgesFromRelationships(relationshipSpecs)
-});
+export const BlockDefinitionDiagram_Dark: Story = {
+  render: () => <AutoLayoutStory specs={bddSpecs} relationships={bddRelationships} diagramType="bdd" background="dark" />,
+  parameters: {
+    docs: {
+      description: {
+        story: 'Block Definition Diagram showing vehicle system hierarchy with automatic hierarchical layout. Dark mode.'
+      }
+    }
+  }
+};
 
-const definitionUsageSpecs: SysMLNodeSpec[] = [
+// ============================================================================
+// Requirement Diagram - Requirements Hierarchy
+// ============================================================================
+
+const requirementSpecs: SysMLNodeSpec[] = [
   {
-    kind: 'part-definition',
+    kind: 'requirement-definition',
     spec: {
-      id: 'VEHICLE-DEF',
-      name: 'Vehicle',
-      description: 'Part definition with attributes, ports, actions, and states.',
-      attributes: [
-        { name: 'mass', type: 'ISQ::Mass' },
-        { name: 'position', type: 'Vector3' }
-      ],
-      ports: [
-        { name: 'fuelCmdPort', direction: 'in', type: 'FuelCmd' },
-        { name: 'vehicleRoadPort', direction: 'inout', type: 'RoadContact' }
-      ]
+      id: 'sys-req',
+      name: 'System Requirements',
+      text: 'The vehicle shall meet all operational requirements'
     }
   },
   {
-    kind: 'part-definition',
+    kind: 'requirement-usage',
     spec: {
-      id: 'SUV-DEF',
-      name: 'SUV',
-      description: 'Specializes Vehicle with steering feature.',
-      attributes: [{ name: 'steeringAngle', type: 'Angle' }]
+      id: 'perf-req',
+      name: 'Performance Requirements',
+      definition: 'sys-req',
+      text: 'The vehicle shall achieve target performance metrics',
+      status: 'reviewed'
     }
   },
   {
-    kind: 'part-usage',
+    kind: 'requirement-usage',
     spec: {
-      id: 'vehicle_b',
-      name: 'vehicle_b:Vehicle',
-      definition: 'Vehicle',
-      attributes: [{ name: 'dryMass', type: 'Real', value: '1200', multiplicity: '[kg]' }],
-      ports: [
-        { name: 'fuelCmdPort', direction: 'in', type: 'FuelCmd' },
-        { name: 'vehicleRoadPort', direction: 'inout', type: 'RoadContact' }
-      ]
+      id: 'safety-req',
+      name: 'Safety Requirements',
+      definition: 'sys-req',
+      text: 'The vehicle shall operate safely in all conditions',
+      status: 'approved'
     }
   },
+  {
+    kind: 'requirement-usage',
+    spec: {
+      id: 'speed-req',
+      name: 'Maximum Speed',
+      definition: 'perf-req',
+      text: 'Top speed shall be at least 180 km/h',
+      status: 'reviewed'
+    }
+  },
+  {
+    kind: 'requirement-usage',
+    spec: {
+      id: 'accel-req',
+      name: 'Acceleration',
+      definition: 'perf-req',
+      text: '0-100 km/h in less than 6 seconds',
+      status: 'reviewed'
+    }
+  },
+  {
+    kind: 'requirement-usage',
+    spec: {
+      id: 'range-req',
+      name: 'Range',
+      definition: 'perf-req',
+      text: 'Minimum range of 400 km on single charge',
+      status: 'draft'
+    }
+  }
+];
+
+const requirementRelationships: SysMLRelationshipSpec[] = [
+  { id: 'e1', type: 'specialization', source: 'perf-req', target: 'sys-req', label: 'specializes' },
+  { id: 'e2', type: 'specialization', source: 'safety-req', target: 'sys-req', label: 'specializes' },
+  { id: 'e3', type: 'specialization', source: 'speed-req', target: 'perf-req', label: 'specializes' },
+  { id: 'e4', type: 'specialization', source: 'accel-req', target: 'perf-req', label: 'specializes' },
+  { id: 'e5', type: 'specialization', source: 'range-req', target: 'perf-req', label: 'specializes' }
+];
+
+export const RequirementDiagram_Light: Story = {
+  render: () => <AutoLayoutStory specs={requirementSpecs} relationships={requirementRelationships} diagramType="requirements" background="light" />,
+  parameters: {
+    docs: {
+      description: {
+        story: 'Requirement hierarchy showing performance and safety requirements with status indicators. Light mode.'
+      }
+    }
+  }
+};
+
+export const RequirementDiagram_Dark: Story = {
+  render: () => <AutoLayoutStory specs={requirementSpecs} relationships={requirementRelationships} diagramType="requirements" background="dark" />,
+  parameters: {
+    docs: {
+      description: {
+        story: 'Requirement hierarchy showing performance and safety requirements with status indicators. Dark mode.'
+      }
+    }
+  }
+};
+
+// ============================================================================
+// State Machine Diagram - Behavioral States
+// ============================================================================
+
+const StateMachineStory = ({ background = 'light' }: { background?: 'light' | 'dark' }) => {
+  const [nodes, setNodes] = useState<SysMLReactFlowNode[]>([]);
+  const [edges, setEdges] = useState<SysMLReactFlowEdge[]>([]);
+
+  useEffect(() => {
+    async function layout() {
+      const stateNodes = [
+        createStateNode({ id: 'off', name: 'Off', entry: 'disablePower()', exit: 'logStateChange()' }, { x: 0, y: 0 }),
+        createStateNode({ id: 'standby', name: 'Standby', entry: 'enableMonitoring()', do: 'monitorBattery()', exit: 'logStateChange()' }, { x: 0, y: 0 }),
+        createStateNode({ id: 'ready', name: 'Ready', entry: 'initializeSystems()', do: 'checkSafety()', exit: 'logStateChange()' }, { x: 0, y: 0 }),
+        createStateNode({ id: 'active', name: 'Active', entry: 'enableDrive()', do: 'controlMotor()', exit: 'disableDrive()' }, { x: 0, y: 0 }),
+        createStateNode({ id: 'fault', name: 'Fault', entry: 'triggerAlarm()', do: 'logError()', exit: 'clearFault()' }, { x: 0, y: 0 })
+      ];
+
+      const transitions = [
+        createStateTransitionEdge({ id: 't1', source: 'off', target: 'standby', trigger: 'powerOn', guard: 'batteryOk' }),
+        createStateTransitionEdge({ id: 't2', source: 'standby', target: 'ready', trigger: 'startRequested', guard: 'systemsHealthy' }),
+        createStateTransitionEdge({ id: 't3', source: 'ready', target: 'active', trigger: 'acceleratorPressed', guard: 'safetyCheckPass' }),
+        createStateTransitionEdge({ id: 't4', source: 'active', target: 'ready', trigger: 'stopped' }),
+        createStateTransitionEdge({ id: 't5', source: 'ready', target: 'standby', trigger: 'shutdown' }),
+        createStateTransitionEdge({ id: 't6', source: 'standby', target: 'off', trigger: 'powerOff' }),
+        createStateTransitionEdge({ id: 't7', source: 'active', target: 'fault', trigger: 'errorDetected' }),
+        createStateTransitionEdge({ id: 't8', source: 'fault', target: 'standby', trigger: 'faultCleared', effect: 'resetSystem()' })
+      ];
+
+      const layoutedNodes = await applyRecommendedLayout(stateNodes, transitions, 'stateMachine');
+      setNodes(layoutedNodes);
+      setEdges(transitions);
+    }
+    layout();
+  }, []);
+
+  return (
+    <ReactFlowProvider>
+      <div style={{
+        width: '100%',
+        height: '100vh',
+        background: background === 'dark' ? '#0b0c0f' : '#ffffff'
+      }}>
+        <SysMLDiagram nodes={nodes} edges={edges} fitView />
+      </div>
+    </ReactFlowProvider>
+  );
+};
+
+export const StateMachineDiagram_Light: Story = {
+  render: () => <StateMachineStory background="light" />,
+  parameters: {
+    docs: {
+      description: {
+        story: 'State machine for vehicle power management with entry/do/exit actions, triggers, and guards. Force-directed layout. Light mode.'
+      }
+    }
+  }
+};
+
+export const StateMachineDiagram_Dark: Story = {
+  render: () => <StateMachineStory background="dark" />,
+  parameters: {
+    docs: {
+      description: {
+        story: 'State machine for vehicle power management with entry/do/exit actions, triggers, and guards. Force-directed layout. Dark mode.'
+      }
+    }
+  }
+};
+
+// ============================================================================
+// Activity Diagram - Action Flow
+// ============================================================================
+
+const activitySpecs: SysMLNodeSpec[] = [
   {
     kind: 'action-definition',
     spec: {
-      id: 'ProvidePower',
-      name: 'ProvidePower',
-      inputs: [{ name: 'pwrCmd', type: 'FuelCmd' }],
-      outputs: [{ name: 'torqueToWheels', type: 'Torque', multiplicity: '[*]' }]
+      id: 'start',
+      name: 'Start Vehicle',
+      description: 'Initialize vehicle systems',
+      outputs: [{ name: 'systemStatus', type: 'Status' }]
     }
   },
   {
     kind: 'action-usage',
     spec: {
-      id: 'providePowerUsage',
-      name: 'ProvidePower()',
-      definition: 'ProvidePower',
-      inputs: [{ name: 'pwrCmd', type: 'FuelCmd' }],
-      outputs: [{ name: 'torqueToWheels', type: 'Torque' }]
+      id: 'check-battery',
+      name: 'Check Battery',
+      definition: 'start',
+      inputs: [{ name: 'systemStatus', type: 'Status' }],
+      outputs: [{ name: 'batteryOk', type: 'Boolean' }]
     }
   },
   {
-    kind: 'port-definition',
+    kind: 'action-usage',
     spec: {
-      id: 'FuelCmdPortDef',
-      name: 'FuelCmdPort',
-      direction: 'in',
-      items: [{ name: 'fuelCmd', type: 'FuelCmd' }]
+      id: 'init-motor',
+      name: 'Initialize Motor',
+      definition: 'start',
+      inputs: [{ name: 'batteryOk', type: 'Boolean' }],
+      outputs: [{ name: 'motorReady', type: 'Boolean' }]
     }
   },
   {
-    kind: 'port-usage',
+    kind: 'action-usage',
     spec: {
-      id: 'FuelCmdPortUsage',
-      name: 'fuelCmdPort',
-      definition: 'FuelCmdPort',
-      direction: 'in',
-      items: [{ name: 'fuelCmd', type: 'FuelCmd' }]
+      id: 'enable-drive',
+      name: 'Enable Drive',
+      definition: 'start',
+      inputs: [{ name: 'motorReady', type: 'Boolean' }],
+      outputs: [{ name: 'driveEnabled', type: 'Boolean' }]
     }
   },
   {
-    kind: 'item-definition',
+    kind: 'action-usage',
     spec: {
-      id: 'FuelCmdDef',
-      name: 'FuelCmd',
-      quantityKind: 'Command',
-      unit: 'n/a'
-    }
-  },
-  {
-    kind: 'item-usage',
-    spec: {
-      id: 'FuelCmdUsage',
-      name: 'fuelCmd',
-      definition: 'FuelCmd'
+      id: 'complete',
+      name: 'Ready to Drive',
+      definition: 'start',
+      inputs: [{ name: 'driveEnabled', type: 'Boolean' }]
     }
   }
 ];
 
-const definitionUsageRelationships: SysMLRelationshipSpec[] = [
-  { id: 'def-specialization', type: 'specialization', source: 'SUV-DEF', target: 'VEHICLE-DEF', label: 'specializes' },
-  { id: 'usage-definition', type: 'definition', source: 'vehicle_b', target: 'VEHICLE-DEF', label: 'defined by' },
-  { id: 'action-definition', type: 'definition', source: 'providePowerUsage', target: 'ProvidePower', label: 'defined by' },
-  { id: 'port-definition', type: 'definition', source: 'FuelCmdPortUsage', target: 'FuelCmdPortDef', label: 'defined by' },
-  { id: 'item-definition', type: 'definition', source: 'FuelCmdUsage', target: 'FuelCmdDef', label: 'defined by' },
-  { id: 'flow-connection', type: 'flow-connection', source: 'FuelCmdPortUsage', target: 'providePowerUsage', label: 'flow' },
-  { id: 'action-flow', type: 'action-flow', source: 'providePowerUsage', target: 'vehicle_b', label: 'performed on' }
+const activityRelationships: SysMLRelationshipSpec[] = [
+  { id: 'e1', type: 'succession', source: 'start', target: 'check-battery', label: 'then' },
+  { id: 'e2', type: 'succession', source: 'check-battery', target: 'init-motor', label: 'then' },
+  { id: 'e3', type: 'succession', source: 'init-motor', target: 'enable-drive', label: 'then' },
+  { id: 'e4', type: 'succession', source: 'enable-drive', target: 'complete', label: 'then' }
 ];
 
-const definitionUsagePositions: Record<string, Partial<XYPosition>> = {
-  'VEHICLE-DEF': { x: 0, y: -40 },
-  'SUV-DEF': { x: 260, y: -40 },
-  vehicle_b: { x: 0, y: 200 },
-  ProvidePower: { x: 520, y: -60 },
-  providePowerUsage: { x: 520, y: 140 },
-  FuelCmdPortDef: { x: -240, y: -40 },
-  FuelCmdPortUsage: { x: -240, y: 160 },
-  FuelCmdDef: { x: 260, y: -220 },
-  FuelCmdUsage: { x: 260, y: 40 }
+export const ActivityDiagram_Light: Story = {
+  render: () => <AutoLayoutStory specs={activitySpecs} relationships={activityRelationships} diagramType="activity" background="light" />,
+  parameters: {
+    docs: {
+      description: {
+        story: 'Activity diagram showing vehicle startup action flow with inputs and outputs. Hierarchical layout. Light mode.'
+      }
+    }
+  }
 };
 
-const definitionUsageModel: SysMLModel = {
-  nodes: definitionUsageSpecs,
-  relationships: definitionUsageRelationships
+export const ActivityDiagram_Dark: Story = {
+  render: () => <AutoLayoutStory specs={activitySpecs} relationships={activityRelationships} diagramType="activity" background="dark" />,
+  parameters: {
+    docs: {
+      description: {
+        story: 'Activity diagram showing vehicle startup action flow with inputs and outputs. Hierarchical layout. Dark mode.'
+      }
+    }
+  }
 };
 
-const bddGraph = (() => {
-  const nodes = createNodesFromSpecs(
-    [
-      {
-        kind: 'part-definition',
-        spec: {
-          id: 'BLK-Power',
-          name: 'PowerController',
-          description: 'Coordinates distribution logic.',
-          attributes: [
-            { name: 'batteryMgr', type: 'BatteryManager' },
-            { name: 'telemetryBus', type: 'DataBus' },
-            { name: 'priority', type: 'String', value: 'critical' }
-          ]
-        }
-      },
-      {
-        kind: 'part-definition',
-        spec: {
-          id: 'BLK-Battery',
-          name: 'BatteryModule',
-          description: 'Provides stored energy.',
-          attributes: [
-            { name: 'cells', type: 'Li-IonPack', multiplicity: '[8]' },
-            { name: 'heater', type: 'ThermalLoop' }
-          ],
-          ports: [{ name: 'powerOut', direction: 'out', type: '28V' }]
-        }
-      }
-    ],
-    {
-      'BLK-Power': { x: 0, y: 60 },
-      'BLK-Battery': { x: 360, y: 60 }
+// ============================================================================
+// Sequence Diagram - Interaction
+// ============================================================================
+
+const SequenceDiagramStory = ({ background = 'light' }: { background?: 'light' | 'dark' }) => {
+  const [nodes, setNodes] = useState<SysMLReactFlowNode[]>([]);
+  const [edges, setEdges] = useState<SysMLReactFlowEdge[]>([]);
+
+  useEffect(() => {
+    async function layout() {
+      const lifelines = [
+        createSequenceLifelineNode({ id: 'driver', name: 'driver: Driver', classifier: 'Actor::Driver' }, { x: 0, y: 0 }),
+        createSequenceLifelineNode({ id: 'controller', name: 'controller: VehicleController', classifier: 'Part::VehicleController' }, { x: 0, y: 0 }),
+        createSequenceLifelineNode({ id: 'battery', name: 'battery: BatteryManager', classifier: 'Part::BatteryManager' }, { x: 0, y: 0 }),
+        createSequenceLifelineNode({ id: 'motor', name: 'motor: MotorController', classifier: 'Part::MotorController' }, { x: 0, y: 0 })
+      ];
+
+      const messages = [
+        createSequenceMessageEdge({ id: 'm1', type: 'sync', source: 'driver', target: 'controller', label: 'pressStartButton()' }),
+        createSequenceMessageEdge({ id: 'm2', type: 'sync', source: 'controller', target: 'battery', label: 'checkStatus()' }),
+        createSequenceMessageEdge({ id: 'm3', type: 'return', source: 'battery', target: 'controller', label: 'BatteryStatus(ok)' }),
+        createSequenceMessageEdge({ id: 'm4', type: 'sync', source: 'controller', target: 'motor', label: 'initialize()', guard: 'batteryOk' }),
+        createSequenceMessageEdge({ id: 'm5', type: 'return', source: 'motor', target: 'controller', label: 'MotorStatus(ready)' }),
+        createSequenceMessageEdge({ id: 'm6', type: 'async', source: 'controller', target: 'driver', label: 'displayReadyStatus()' })
+      ];
+
+      const layoutedNodes = await applyRecommendedLayout(lifelines, messages, 'sequence');
+      setNodes(layoutedNodes);
+      setEdges(messages);
     }
+    layout();
+  }, []);
+
+  return (
+    <ReactFlowProvider>
+      <div style={{
+        width: '100%',
+        height: '100vh',
+        background: background === 'dark' ? '#0b0c0f' : '#ffffff'
+      }}>
+        <SysMLDiagram nodes={nodes} edges={edges} fitView />
+      </div>
+    </ReactFlowProvider>
   );
+};
 
-  const edges = createEdgesFromRelationships([
-    { id: 'bdd-dependency', type: 'dependency', source: 'BLK-Power', target: 'BLK-Battery', label: 'uses' }
-  ]);
-
-  return { nodes, edges };
-})();
-
-const ibdGraph = (() => {
-  const nodes = createNodesFromSpecs(
-    [
-      {
-        kind: 'part-usage',
-        spec: {
-          id: 'IBD-CONTROLLER',
-          name: 'Controller',
-          attributes: [
-            { name: 'psu', type: 'PowerSupply' },
-            { name: 'swMatrix', type: 'SwitchMatrix' }
-          ],
-          ports: [
-            { name: 'powerIn', direction: 'in', type: '28V' },
-            { name: 'powerOut', direction: 'out', type: '28V' }
-          ]
-        }
-      },
-      {
-        kind: 'part-usage',
-        spec: {
-          id: 'IBD-PAYLOAD',
-          name: 'PayloadBay',
-          ports: [
-            { name: 'powerIn', direction: 'in', type: '28V' },
-            { name: 'telemetry', direction: 'out', type: 'CAN' }
-          ]
-        }
-      },
-      {
-        kind: 'action-usage',
-        spec: {
-          id: 'IBD-MON',
-          name: 'MonitorLoads',
-          description: 'Measures currents and reports anomalies',
-          inputs: [{ name: 'telemetry', type: 'CAN' }],
-          outputs: [{ name: 'alerts', type: 'Event' }]
-        }
+export const SequenceDiagram_Light: Story = {
+  render: () => <SequenceDiagramStory background="light" />,
+  parameters: {
+    docs: {
+      description: {
+        story: 'Sequence diagram showing vehicle startup interaction with sync/async messages and return values. Automatic horizontal lifeline layout. Light mode.'
       }
-    ],
-    {
-      'IBD-CONTROLLER': { x: 0, y: 40 },
-      'IBD-PAYLOAD': { x: 380, y: 60 },
-      'IBD-MON': { x: 760, y: 140 }
     }
-  );
+  }
+};
 
-  const edges = createEdgesFromRelationships([
-    { id: 'ibd-alloc', type: 'allocate', source: 'IBD-CONTROLLER', target: 'IBD-MON', label: 'allocate' },
-    { id: 'ibd-dep', type: 'dependency', source: 'IBD-CONTROLLER', target: 'IBD-PAYLOAD', label: 'feeds' }
-  ]);
-
-  return { nodes, edges };
-})();
-
-const useCaseGraph = (() => {
-  const nodes = createNodesFromSpecs(
-    [
-      {
-        kind: 'use-case-definition',
-        spec: {
-          id: 'ACT-Operator',
-          name: 'Operator',
-          description: 'Ground operator interacts with the power system.'
-        }
-      },
-      {
-        kind: 'use-case-usage',
-        spec: {
-          id: 'UC-Manage',
-          name: 'Manage Power',
-          description: 'Configure loads and review reports.'
-        }
-      },
-      {
-        kind: 'use-case-usage',
-        spec: {
-          id: 'UC-Log',
-          name: 'Log Telemetry',
-          description: 'Persist all power events.'
-        }
-      },
-      {
-        kind: 'use-case-usage',
-        spec: {
-          id: 'UC-Recover',
-          name: 'Recover From Fault',
-          description: 'Isolate bad branches and restore nominal ops.'
-        }
+export const SequenceDiagram_Dark: Story = {
+  render: () => <SequenceDiagramStory background="dark" />,
+  parameters: {
+    docs: {
+      description: {
+        story: 'Sequence diagram showing vehicle startup interaction with sync/async messages and return values. Automatic horizontal lifeline layout. Dark mode.'
       }
-    ],
-    {
-      'ACT-Operator': { x: -120, y: 40 },
-      'UC-Manage': { x: 200, y: 20 },
-      'UC-Log': { x: 520, y: 100 },
-      'UC-Recover': { x: 200, y: 260 }
     }
-  );
+  }
+};
 
-  const edges = createEdgesFromRelationships([
-    { id: 'uc-include', type: 'include', source: 'UC-Manage', target: 'UC-Log', label: 'include' },
-    { id: 'uc-extend', type: 'extend', source: 'UC-Recover', target: 'UC-Manage', label: 'extend' },
-    { id: 'uc-actor', type: 'dependency', source: 'ACT-Operator', target: 'UC-Manage', label: 'interacts' }
-  ]);
+// ============================================================================
+// Allocation Diagram - System to Subsystem Allocation
+// ============================================================================
 
-  return { nodes, edges };
-})();
-
-const stateMachineGraph = (() => {
-  const machine = createStateMachineNode(
-    {
-      id: 'SM-Power',
-      name: 'Power State Machine',
-      states: [
-        { id: 'SM-Idle', name: 'Idle' },
-        { id: 'SM-Ready', name: 'Ready' },
-        { id: 'SM-Fault', name: 'Fault' }
+const allocationSpecs: SysMLNodeSpec[] = [
+  {
+    kind: 'requirement-usage',
+    spec: {
+      id: 'perf-001',
+      name: 'Performance Requirement',
+      text: 'System shall achieve 0-100 km/h in < 6s',
+      status: 'approved'
+    }
+  },
+  {
+    kind: 'part-definition',
+    spec: {
+      id: 'motor-sys',
+      name: 'MotorSystem',
+      description: 'Electric propulsion',
+      attributes: [
+        { name: 'power', type: 'Real', multiplicity: '[kW]' }
       ]
-    },
-    { x: -200, y: -20 }
-  );
-
-  const idle = createStateNode(
-    {
-      id: 'SM-Idle',
-      name: 'Idle',
-      entryAction: 'reset()',
-      doActivity: 'monitor()'
-    },
-    { x: 200, y: -60 }
-  );
-
-  const ready = createStateNode(
-    {
-      id: 'SM-Ready',
-      name: 'Ready',
-      entryAction: 'prepPower()',
-      doActivity: 'supply()',
-      exitAction: 'handoff()'
-    },
-    { x: 520, y: 40 }
-  );
-
-  const fault = createStateNode(
-    {
-      id: 'SM-Fault',
-      name: 'Fault',
-      entryAction: 'isolate()',
-      doActivity: 'diagnose()'
-    },
-    { x: 520, y: 260 }
-  );
-
-  const edges = [
-    createStateTransitionEdge({
-      id: 'sm-start',
-      source: 'SM-Idle',
-      target: 'SM-Ready',
-      trigger: 'activate()',
-      guard: 'batteryOk'
-    }),
-    createStateTransitionEdge({
-      id: 'sm-fault',
-      source: 'SM-Ready',
-      target: 'SM-Fault',
-      trigger: 'faultDetected',
-      effect: 'notify()'
-    }),
-    createStateTransitionEdge({
-      id: 'sm-reset',
-      source: 'SM-Fault',
-      target: 'SM-Idle',
-      trigger: 'resetCommand'
-    })
-  ];
-
-  return { nodes: [machine, idle, ready, fault], edges };
-})();
-
-const sequenceGraph = (() => {
-  const controller = createSequenceLifelineNode(
-    { id: 'SEQ-CTRL', name: 'Controller', classifier: 'PartDefinition::Controller' },
-    { x: 0, y: 0 }
-  );
-  const pcm = createSequenceLifelineNode(
-    { id: 'SEQ-PCM', name: 'PCM', classifier: 'PartDefinition::PCM' },
-    { x: 260, y: 0 }
-  );
-  const load = createSequenceLifelineNode(
-    { id: 'SEQ-LOAD', name: 'Load', classifier: 'PartDefinition::Load' },
-    { x: 520, y: 0 }
-  );
-
-  const edges = [
-    createSequenceMessageEdge({
-      id: 'msg-1',
-      type: 'sync',
-      source: 'SEQ-CTRL',
-      target: 'SEQ-PCM',
-      label: 'enablePower()'
-    }),
-    createSequenceMessageEdge({
-      id: 'msg-2',
-      type: 'async',
-      source: 'SEQ-PCM',
-      target: 'SEQ-LOAD',
-      label: 'applyLoad(loadId)',
-      guard: 'available'
-    }),
-    createSequenceMessageEdge({
-      id: 'msg-3',
-      type: 'return',
-      source: 'SEQ-LOAD',
-      target: 'SEQ-CTRL',
-      label: 'ack()'
-    })
-  ];
-
-  return { nodes: [controller, pcm, load], edges };
-})();
-
-const activityGraph = (() => {
-  const nodes = createNodesFromSpecs(
-    [
-      {
-        kind: 'action-usage',
-        spec: {
-          id: 'ACT-Init',
-          name: 'Initialize',
-          description: 'Boot subsystems',
-          outputs: [{ name: 'ready', type: 'Signal' }]
-        }
-      },
-      {
-        kind: 'action-usage',
-        spec: {
-          id: 'ACT-Config',
-          name: 'Configure Loads',
-          description: 'Resolve priorities',
-          inputs: [{ name: 'ready', type: 'Signal' }]
-        }
-      },
-      {
-        kind: 'action-usage',
-        spec: {
-          id: 'ACT-Monitor',
-          name: 'Monitor Current',
-          description: 'Sample sensors',
-          outputs: [{ name: 'currents', type: 'Telemetry' }]
-        }
-      },
-      {
-        kind: 'action-usage',
-        spec: {
-          id: 'ACT-Recover',
-          name: 'Recover Fault',
-          description: 'Isolate branch and notify ground'
-        }
-      },
-      {
-        kind: 'action-usage',
-        spec: {
-          id: 'ACT-Shutdown',
-          name: 'Shutdown',
-          description: 'Deactivate loads'
-        }
-      }
-    ],
-    {
-      'ACT-Init': { x: -100, y: 0 },
-      'ACT-Config': { x: 380, y: -80 },
-      'ACT-Monitor': { x: 380, y: 120 },
-      'ACT-Recover': { x: 860, y: 180 },
-      'ACT-Shutdown': { x: 1280, y: 40 }
     }
-  );
-
-  const fork = createActivityControlNode(
-    { id: 'ACT-Fork', name: 'Fork', controlType: 'fork' },
-    { x: 180, y: 40 }
-  );
-
-  const decision = createActivityControlNode(
-    { id: 'ACT-Decision', name: 'Decision', controlType: 'decision' },
-    { x: 620, y: 40 }
-  );
-
-  const merge = createActivityControlNode(
-    { id: 'ACT-Merge', name: 'Merge', controlType: 'merge' },
-    { x: 860, y: 0 }
-  );
-
-  const join = createActivityControlNode(
-    { id: 'ACT-Join', name: 'Join', controlType: 'join' },
-    { x: 1080, y: 40 }
-  );
-
-  const edges = createEdgesFromRelationships([
-    { id: 'cf-1', type: 'control-flow', source: 'ACT-Init', target: 'ACT-Fork', label: 'ready' },
-    { id: 'cf-2', type: 'control-flow', source: 'ACT-Fork', target: 'ACT-Config' },
-    { id: 'cf-3', type: 'control-flow', source: 'ACT-Fork', target: 'ACT-Monitor' },
-    { id: 'cf-4', type: 'control-flow', source: 'ACT-Config', target: 'ACT-Decision' },
-    { id: 'cf-5', type: 'control-flow', source: 'ACT-Monitor', target: 'ACT-Decision' },
-    { id: 'cf-6', type: 'control-flow', source: 'ACT-Decision', target: 'ACT-Recover', label: 'fault' },
-    { id: 'cf-7', type: 'control-flow', source: 'ACT-Decision', target: 'ACT-Merge', label: 'nominal' },
-    { id: 'cf-8', type: 'control-flow', source: 'ACT-Recover', target: 'ACT-Join' },
-    { id: 'cf-9', type: 'control-flow', source: 'ACT-Merge', target: 'ACT-Join' },
-    { id: 'cf-10', type: 'control-flow', source: 'ACT-Join', target: 'ACT-Shutdown' }
-  ]);
-
-  return {
-    nodes: [...nodes, fork, decision, merge, join],
-    edges
-  };
-})();
-
-const definitionUsageGraph = (() => ({
-  nodes: createNodesFromSpecs(definitionUsageSpecs, definitionUsagePositions),
-  edges: createEdgesFromRelationships(definitionUsageRelationships)
-}))();
-
-const meta = {
-  title: 'SysML/SysMLDiagram',
-  component: SysMLDiagram,
-  args: createGraph(),
-  parameters: {
-    docs: {
-      description: {
-        component:
-          'SysMLDiagram wires the provided node/edge registries, minimap, and controls on top of React Flow.'
-      }
-    }
-  }
-} satisfies Meta<typeof SysMLDiagram>;
-
-export default meta;
-
-type Story = StoryObj<typeof meta>;
-
-export const Default: Story = {};
-
-export const MinimalChrome: Story = {
-  args: {
-    ...createGraph(),
-    showMiniMap: false,
-    showControls: false,
-    showBackground: false
-  }
-};
-
-export const BlockDefinitionDiagram: Story = {
-  args: bddGraph,
-  parameters: {
-    docs: {
-      description: { story: 'Part definition relationships between controller and battery modules.' }
-    }
-  }
-};
-
-export const InternalBlockDiagram: Story = {
-  args: ibdGraph,
-  parameters: {
-    docs: {
-      description: { story: 'Internal block view showing allocated activities and port-based flows.' }
-    }
-  }
-};
-
-export const UseCaseDiagram: Story = {
-  args: useCaseGraph,
-  parameters: {
-    docs: {
-      description: { story: 'Use-case coverage with include/extend connectors and actors.' }
-    }
-  }
-};
-
-export const StateMachineDiagram: Story = {
-  args: stateMachineGraph,
-  parameters: {
-    docs: {
-      description: { story: 'State machine nodes with transition edges carrying triggers/guards.' }
-    }
-  }
-};
-
-export const SequenceDiagram: Story = {
-  args: sequenceGraph,
-  parameters: {
-    docs: {
-      description: { story: 'Lifelines connected by synchronous and asynchronous message edges.' }
-    }
-  }
-};
-
-export const ActivityDiagram: Story = {
-  args: activityGraph,
-  parameters: {
-    docs: {
-      description: { story: 'Activity nodes connected with fork/join/decision/merge control nodes.' }
-    }
-  }
-};
-
-export const DefinitionUsageDiagram: Story = {
-  args: definitionUsageGraph,
-  parameters: {
-    docs: {
-      description: {
-        story:
-          'Part/action/port/item definitions and usages linked via specialization, definition, and flow/action-flow edges.'
-      }
-    }
-  }
-};
-
-export const StructuralDefinitionView: Story = {
-  args: {
-    model: definitionUsageModel,
-    viewpoint: structuralDefinitionViewpoint
   },
+  {
+    kind: 'action-definition',
+    spec: {
+      id: 'accelerate',
+      name: 'Accelerate',
+      description: 'Control motor acceleration',
+      inputs: [{ name: 'throttle', type: 'Real' }],
+      outputs: [{ name: 'torque', type: 'Real' }]
+    }
+  },
+  {
+    kind: 'constraint-definition',
+    spec: {
+      id: 'accel-constraint',
+      name: 'AccelerationConstraint',
+      description: 'torque >= requiredTorque(speed)'
+    }
+  }
+];
+
+const allocationRelationships: SysMLRelationshipSpec[] = [
+  { id: 'e1', type: 'satisfy', source: 'motor-sys', target: 'perf-001', label: 'satisfies' },
+  { id: 'e2', type: 'allocate', source: 'motor-sys', target: 'accelerate', label: 'allocated to' },
+  { id: 'e3', type: 'refine', source: 'accelerate', target: 'accel-constraint', label: 'refines' }
+];
+
+export const AllocationDiagram_Light: Story = {
+  render: () => <AutoLayoutStory specs={allocationSpecs} relationships={allocationRelationships} diagramType="requirements" background="light" />,
   parameters: {
     docs: {
-      description: { story: 'SysML v2 Structural Definition Viewpoint realized automatically from the model specs.' }
+      description: {
+        story: 'Allocation diagram showing how requirements are satisfied by parts, allocated to actions, and refined by constraints. Light mode.'
+      }
     }
   }
 };
 
-export const UsageStructureView: Story = {
-  args: {
-    model: definitionUsageModel,
-    viewpoint: usageStructureViewpoint
-  },
+export const AllocationDiagram_Dark: Story = {
+  render: () => <AutoLayoutStory specs={allocationSpecs} relationships={allocationRelationships} diagramType="requirements" background="dark" />,
   parameters: {
     docs: {
       description: {
-        story: 'Usage-focused viewpoint showing how usages trace back to definitions via definition/action-flow edges.'
+        story: 'Allocation diagram showing how requirements are satisfied by parts, allocated to actions, and refined by constraints. Dark mode.'
+      }
+    }
+  }
+};
+
+// ============================================================================
+// Use Case Diagram
+// ============================================================================
+
+const useCaseSpecs: SysMLNodeSpec[] = [
+  {
+    kind: 'use-case-definition',
+    spec: {
+      id: 'drive-vehicle',
+      name: 'Drive Vehicle',
+      description: 'Operate vehicle in normal driving mode'
+    }
+  },
+  {
+    kind: 'use-case-usage',
+    spec: {
+      id: 'start-vehicle',
+      name: 'Start Vehicle',
+      definition: 'drive-vehicle'
+    }
+  },
+  {
+    kind: 'use-case-usage',
+    spec: {
+      id: 'monitor-battery',
+      name: 'Monitor Battery',
+      definition: 'drive-vehicle'
+    }
+  },
+  {
+    kind: 'use-case-usage',
+    spec: {
+      id: 'charge-battery',
+      name: 'Charge Battery',
+      definition: 'drive-vehicle'
+    }
+  }
+];
+
+const useCaseRelationships: SysMLRelationshipSpec[] = [
+  { id: 'e1', type: 'include', source: 'drive-vehicle', target: 'start-vehicle', label: 'includes' },
+  { id: 'e2', type: 'include', source: 'drive-vehicle', target: 'monitor-battery', label: 'includes' },
+  { id: 'e3', type: 'extend', source: 'charge-battery', target: 'monitor-battery', label: 'extends' }
+];
+
+export const UseCaseDiagram_Light: Story = {
+  render: () => <AutoLayoutStory specs={useCaseSpecs} relationships={useCaseRelationships} diagramType="requirements" background="light" />,
+  parameters: {
+    docs: {
+      description: {
+        story: 'Use case diagram showing vehicle operation scenarios with include and extend relationships. Light mode.'
+      }
+    }
+  }
+};
+
+export const UseCaseDiagram_Dark: Story = {
+  render: () => <AutoLayoutStory specs={useCaseSpecs} relationships={useCaseRelationships} diagramType="requirements" background="dark" />,
+  parameters: {
+    docs: {
+      description: {
+        story: 'Use case diagram showing vehicle operation scenarios with include and extend relationships. Dark mode.'
       }
     }
   }
