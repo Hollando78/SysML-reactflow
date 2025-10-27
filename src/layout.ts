@@ -415,6 +415,22 @@ function projectToBoundary(
   geom: NodeGeometry
 ): SysMLRoutePoint {
   const { centerX, centerY, x, y, width, height } = geom;
+
+  const epsilon = 0.5;
+  const paddedLeft = x - epsilon;
+  const paddedRight = x + width + epsilon;
+  const paddedTop = y - epsilon;
+  const paddedBottom = y + height + epsilon;
+
+  if (
+    boundaryPoint.x <= paddedLeft ||
+    boundaryPoint.x >= paddedRight ||
+    boundaryPoint.y <= paddedTop ||
+    boundaryPoint.y >= paddedBottom
+  ) {
+    return boundaryPoint;
+  }
+
   let dx = boundaryPoint.x - centerX;
   let dy = boundaryPoint.y - centerY;
 
