@@ -27,6 +27,15 @@ export async function measureNodeDimensions(nodes: SysMLReactFlowNode[]): Promis
     return {};
   }
 
+  const fontSet = (document as unknown as { fonts?: FontFaceSet }).fonts;
+  if (fontSet && fontSet.ready) {
+    try {
+      await fontSet.ready;
+    } catch {
+      // Ignore font loading errors, fall back to current metrics
+    }
+  }
+
   // Clone nodes so React Flow measurement does not mutate caller state
   const measurementNodes: SysMLReactFlowNode[] = nodes.map((node) => ({
     ...node,
