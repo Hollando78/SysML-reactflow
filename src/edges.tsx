@@ -59,116 +59,132 @@ const getEdgeStyle = (kind?: string) => {
 };
 
 // Custom marker definitions for SysML relationships
-const SysMLEdgeMarkers = () => (
-  <svg style={{ position: 'absolute', width: 0, height: 0 }}>
-    <defs>
-      {/* Filled arrow for directed associations */}
-      <marker
-        id="arrow-filled"
-        viewBox="0 0 10 10"
-        refX="9"
-        refY="5"
-        markerWidth="6"
-        markerHeight="6"
-        orient="auto"
-      >
-        <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor" />
-      </marker>
+// Create color-specific markers for each edge color
+const SysMLEdgeMarkers = () => {
+  const colors = Object.values(edgeColors);
+  const uniqueColors = Array.from(new Set([...colors, '#f4f4f4']));
 
-      {/* Open arrow for general relationships */}
-      <marker
-        id="arrow-open"
-        viewBox="0 0 10 10"
-        refX="9"
-        refY="5"
-        markerWidth="6"
-        markerHeight="6"
-        orient="auto"
-      >
-        <path d="M 0 0 L 10 5 L 0 10" fill="none" stroke="currentColor" strokeWidth="1.5" />
-      </marker>
+  return (
+    <svg style={{ position: 'absolute', width: 0, height: 0 }}>
+      <defs>
+        {uniqueColors.map((color) => {
+          const colorId = color.replace('#', '');
+          return (
+            <g key={color}>
+              {/* Filled arrow */}
+              <marker
+                id={`arrow-filled-${colorId}`}
+                viewBox="0 0 10 10"
+                refX="9"
+                refY="5"
+                markerWidth="6"
+                markerHeight="6"
+                orient="auto"
+              >
+                <path d="M 0 0 L 10 5 L 0 10 z" fill={color} />
+              </marker>
 
-      {/* Hollow triangle for specialization/generalization */}
-      <marker
-        id="arrow-triangle-hollow"
-        viewBox="0 0 12 12"
-        refX="11"
-        refY="6"
-        markerWidth="8"
-        markerHeight="8"
-        orient="auto"
-      >
-        <path d="M 2 2 L 11 6 L 2 10 z" fill="white" stroke="currentColor" strokeWidth="1.5" />
-      </marker>
+              {/* Open arrow */}
+              <marker
+                id={`arrow-open-${colorId}`}
+                viewBox="0 0 10 10"
+                refX="9"
+                refY="5"
+                markerWidth="6"
+                markerHeight="6"
+                orient="auto"
+              >
+                <path d="M 0 0 L 10 5 L 0 10" fill="none" stroke={color} strokeWidth="1.5" />
+              </marker>
 
-      {/* Filled diamond for composition */}
-      <marker
-        id="diamond-filled"
-        viewBox="0 0 12 12"
-        refX="11"
-        refY="6"
-        markerWidth="8"
-        markerHeight="8"
-        orient="auto"
-      >
-        <path d="M 2 6 L 6 2 L 10 6 L 6 10 z" fill="currentColor" stroke="currentColor" strokeWidth="1.5" />
-      </marker>
+              {/* Hollow triangle for specialization/generalization */}
+              <marker
+                id={`arrow-triangle-hollow-${colorId}`}
+                viewBox="0 0 12 12"
+                refX="11"
+                refY="6"
+                markerWidth="8"
+                markerHeight="8"
+                orient="auto"
+              >
+                <path d="M 2 2 L 11 6 L 2 10 z" fill="white" stroke={color} strokeWidth="1.5" />
+              </marker>
 
-      {/* Hollow diamond for aggregation */}
-      <marker
-        id="diamond-hollow"
-        viewBox="0 0 12 12"
-        refX="11"
-        refY="6"
-        markerWidth="8"
-        markerHeight="8"
-        orient="auto"
-      >
-        <path d="M 2 6 L 6 2 L 10 6 L 6 10 z" fill="white" stroke="currentColor" strokeWidth="1.5" />
-      </marker>
+              {/* Filled diamond for composition */}
+              <marker
+                id={`diamond-filled-${colorId}`}
+                viewBox="0 0 12 12"
+                refX="11"
+                refY="6"
+                markerWidth="8"
+                markerHeight="8"
+                orient="auto"
+              >
+                <path d="M 2 6 L 6 2 L 10 6 L 6 10 z" fill={color} stroke={color} strokeWidth="1.5" />
+              </marker>
 
-      {/* Circle for port connections */}
-      <marker
-        id="circle"
-        viewBox="0 0 10 10"
-        refX="5"
-        refY="5"
-        markerWidth="6"
-        markerHeight="6"
-        orient="auto"
-      >
-        <circle cx="5" cy="5" r="3" fill="white" stroke="currentColor" strokeWidth="1.5" />
-      </marker>
-    </defs>
-  </svg>
-);
+              {/* Hollow diamond for aggregation */}
+              <marker
+                id={`diamond-hollow-${colorId}`}
+                viewBox="0 0 12 12"
+                refX="11"
+                refY="6"
+                markerWidth="8"
+                markerHeight="8"
+                orient="auto"
+              >
+                <path d="M 2 6 L 6 2 L 10 6 L 6 10 z" fill="white" stroke={color} strokeWidth="1.5" />
+              </marker>
+
+              {/* Circle for port connections */}
+              <marker
+                id={`circle-${colorId}`}
+                viewBox="0 0 10 10"
+                refX="5"
+                refY="5"
+                markerWidth="6"
+                markerHeight="6"
+                orient="auto"
+              >
+                <circle cx="5" cy="5" r="3" fill="white" stroke={color} strokeWidth="1.5" />
+              </marker>
+            </g>
+          );
+        })}
+      </defs>
+    </svg>
+  );
+};
 
 // Get appropriate marker for relationship type
 const getMarkerEnd = (kind?: string): string => {
+  const color = kind ? edgeColors[kind] ?? '#f4f4f4' : '#f4f4f4';
+  const colorId = color.replace('#', '');
+
   switch (kind) {
     case 'specialization':
     case 'conjugation':
-      return 'url(#arrow-triangle-hollow)';
+      return `url(#arrow-triangle-hollow-${colorId})`;
     case 'composition':
-      return 'url(#diamond-filled)';
+      return `url(#diamond-filled-${colorId})`;
     case 'aggregation':
-      return 'url(#diamond-hollow)';
+      return `url(#diamond-hollow-${colorId})`;
     case 'feature-typing':
     case 'subsetting':
     case 'redefinition':
-      return 'url(#arrow-open)';
+      return `url(#arrow-open-${colorId})`;
     case 'satisfy':
     case 'verify':
     case 'refine':
     case 'allocate':
-      return 'url(#arrow-open)';
+      return `url(#arrow-open-${colorId})`;
     case 'dependency':
-      return 'url(#arrow-open)';
+      return `url(#arrow-open-${colorId})`;
     case 'association':
     case 'featuring':
-      return 'url(#arrow-filled)';
+      return `url(#arrow-filled-${colorId})`;
     default:
-      return 'url(#arrow-filled)';
+      return `url(#arrow-filled-${colorId})`;
   }
 };
 
