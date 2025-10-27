@@ -5,8 +5,12 @@ import type {
   SysMLEdgeData,
   SysMLEdgeRoute,
   SysMLEdgeRouting,
-  SysMLRoutePoint
+  SysMLRoutePoint,
+  SysMLNodeSpec,
+  SysMLRelationshipSpec
 } from './types';
+import { measureNodeDimensions } from './measurement';
+import { createNodesFromSpecs, createEdgesFromRelationships } from './factories';
 
 /**
  * Layout algorithm types supported for SysML diagrams
@@ -109,10 +113,15 @@ export interface LayoutResult {
   edges: Edge<SysMLEdgeData>[];
 }
 
+export interface NodeDimensionMap {
+  [id: string]: { width: number; height: number };
+}
+
 export async function applyLayout(
   nodes: Node<SysMLNodeData>[],
   edges: Edge<SysMLEdgeData>[],
-  options: LayoutOptions = {}
+  options: LayoutOptions = {},
+  nodeDimensions?: NodeDimensionMap
 ): Promise<LayoutResult> {
   const opts = { ...defaultOptions, ...options };
 
@@ -129,8 +138,8 @@ export async function applyLayout(
     layoutOptions: getElkOptions(opts),
     children: nodes.map((node) => ({
       id: node.id,
-      width: opts.nodeWidth,
-      height: opts.nodeHeight
+      width: nodeDimensions?.[node.id]?.width ?? opts.nodeWidth,
+      height: nodeDimensions?.[node.id]?.height ?? opts.nodeHeight
     })),
     edges: edges.map((edge) => {
       const routing = getRoutingModeForEdge(edge);
@@ -461,4 +470,36 @@ export async function applyRecommendedLayout(
 ): Promise<LayoutResult> {
   const recommended = recommendedLayouts[diagramType];
   return applyLayout(nodes, edges, { ...recommended, ...overrides });
+}
+
+export interface LayoutPipelineOptions extends LayoutOptions {
+  measure?: boolean;
+}
+
+export async function layoutAndRoute(
+  nodes: Node<SysMLNodeData>[],
+  edges: Edge<SysMLEdgeData>[],
+  options: LayoutPipelineOptions = {}
+): Promise<LayoutResult> {
+  const { measure = true, ...layoutOptions } = options;
+  let nodeDimensions: NodeDimensionMap | undefined;
+
+  if (measure) {
+    nodeDimensions = await measureNodeDimensions(nodes);
+  }
+
+  return applyLayout(nodes, edges, layoutOptions, nodeDimensions);
+}
+
+export async function layoutAndRouteFromSpecs(
+  specs: SysMLNodeSpec[],
+  relationships: SysMLRelationshipSpec[],
+  diagramType: keyof typeof recommendedLayouts,
+  options: LayoutPipelineOptions = {}
+): Promise<LayoutResult> {
+  const nodes = createNodesFromSpecs(specs);
+  const edges = createEdgesFromRelationships(relationships);
+  const base = recommendedLayouts[diagramType];
+  const { measure = true, ...overrides } = options;
+  return layoutAndRoute(nodes, edges, { ...base, ...overrides, measure });
 }

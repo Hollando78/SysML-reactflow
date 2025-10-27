@@ -162,7 +162,13 @@ export {
   applyLayout,
   applyRecommendedLayout,
   recommendedLayouts,
+  layoutAndRoute,
+  layoutAndRouteFromSpecs,
   type LayoutOptions,
   type LayoutAlgorithm,
-  type LayoutDirection
+  type LayoutDirection,
+  type LayoutPipelineOptions,
+  type NodeDimensionMap,
+  type LayoutResult
 } from './layout';
+export { measureNodeDimensions, type MeasuredNodeMap, type MeasuredNodeDimension } from './measurement';

@@ -4,8 +4,8 @@ import {
   SysMLDiagram,
   createNodesFromSpecs,
   createEdgesFromRelationships,
-  applyLayout,
-  applyRecommendedLayout,
+  layoutAndRoute,
+  layoutAndRouteFromSpecs,
   type SysMLReactFlowNode,
   type SysMLReactFlowEdge,
   type LayoutAlgorithm
@@ -132,8 +132,9 @@ export const BasicLayoutExample = () => {
       const initialNodes = createNodesFromSpecs(requirementSpecs);
       const initialEdges = createEdgesFromRelationships(requirementRelationships);
 
-      // Apply automatic layout
-      const { nodes: layoutedNodes, edges: layoutedEdges } = await applyLayout(initialNodes, initialEdges, {
+      // Apply automatic layout with measurement
+      const { nodes: layoutedNodes, edges: layoutedEdges } = await layoutAndRoute(initialNodes, initialEdges, {
+        measure: true,
         algorithm: 'layered',
         direction: 'DOWN',
         nodeSpacing: 100,
@@ -166,14 +167,11 @@ export const RecommendedLayoutExample = () => {
 
   useEffect(() => {
     async function layoutDiagram() {
-      const initialNodes = createNodesFromSpecs(requirementSpecs);
-      const initialEdges = createEdgesFromRelationships(requirementRelationships);
-
-      // Apply recommended layout for requirements
-      const { nodes: layoutedNodes, edges: layoutedEdges } = await applyRecommendedLayout(
-        initialNodes,
-        initialEdges,
-        'requirements'
+      const { nodes: layoutedNodes, edges: layoutedEdges } = await layoutAndRouteFromSpecs(
+        requirementSpecs,
+        requirementRelationships,
+        'requirements',
+        { measure: true }
       );
 
       setNodes(layoutedNodes);
@@ -198,9 +196,7 @@ export const RecommendedLayoutExample = () => {
  */
 export const InteractiveLayoutExample = () => {
   const [nodes, setNodes] = useState<SysMLReactFlowNode[]>([]);
-  const [edges, setEdges] = useState<SysMLReactFlowEdge[]>(
-    () => createEdgesFromRelationships(blockRelationships)
-  );
+  const [edges, setEdges] = useState<SysMLReactFlowEdge[]>([]);
   const [algorithm, setAlgorithm] = useState<LayoutAlgorithm>('layered');
 
   useEffect(() => {
@@ -208,11 +204,12 @@ export const InteractiveLayoutExample = () => {
       const initialNodes = createNodesFromSpecs(blockSpecs);
       const initialEdges = createEdgesFromRelationships(blockRelationships);
 
-      const { nodes: layoutedNodes, edges: layoutedEdges } = await applyLayout(initialNodes, initialEdges, {
+      const { nodes: layoutedNodes, edges: layoutedEdges } = await layoutAndRoute(initialNodes, initialEdges, {
         algorithm,
+        measure: true,
         direction: 'DOWN',
-        nodeSpacing: 80,
-        layerSpacing: 100
+        nodeSpacing: 140,
+        layerSpacing: 160
       });
 
       setNodes(layoutedNodes);
@@ -253,9 +250,7 @@ export const InteractiveLayoutExample = () => {
  */
 export const CustomLayoutExample = () => {
   const [nodes, setNodes] = useState<SysMLReactFlowNode[]>([]);
-  const [edges, setEdges] = useState<SysMLReactFlowEdge[]>(
-    () => createEdgesFromRelationships(requirementRelationships)
-  );
+  const [edges, setEdges] = useState<SysMLReactFlowEdge[]>([]);
   const [nodeSpacing, setNodeSpacing] = useState(80);
   const [layerSpacing, setLayerSpacing] = useState(100);
 
@@ -264,8 +259,9 @@ export const CustomLayoutExample = () => {
       const initialNodes = createNodesFromSpecs(requirementSpecs);
       const initialEdges = createEdgesFromRelationships(requirementRelationships);
 
-      const { nodes: layoutedNodes, edges: layoutedEdges } = await applyLayout(initialNodes, initialEdges, {
+      const { nodes: layoutedNodes, edges: layoutedEdges } = await layoutAndRoute(initialNodes, initialEdges, {
         algorithm: 'layered',
+        measure: true,
         direction: 'DOWN',
         nodeSpacing,
         layerSpacing

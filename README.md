@@ -153,14 +153,17 @@ export function Example() {
 Apply automatic graph layout with optimized algorithms for different diagram types:
 
 ```tsx
-import { applyRecommendedLayout } from 'sysml-reactflow';
+import { layoutAndRouteFromSpecs } from 'sysml-reactflow';
 
-// Create nodes and edges
-const nodes = createNodesFromSpecs([...]);
-const edges = createEdgesFromRelationships([...]);
+const specs = [...];
+const relationships = [...];
 
-// Apply automatic layout
-const { nodes: layoutedNodes, edges: layoutedEdges } = await applyRecommendedLayout(nodes, edges, 'requirements');
+const { nodes: layoutedNodes, edges: layoutedEdges } = await layoutAndRouteFromSpecs(
+  specs,
+  relationships,
+  'requirements',
+  { measure: true }
+);
 
 <SysMLDiagram nodes={layoutedNodes} edges={layoutedEdges} fitView />
 ```

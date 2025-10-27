@@ -5,11 +5,13 @@ import {
   SysMLDiagram,
   createNodesFromSpecs,
   createEdgesFromRelationships,
-  applyRecommendedLayout,
   createSequenceLifelineNode,
   createSequenceMessageEdge,
   createStateNode,
   createStateTransitionEdge,
+  layoutAndRoute,
+  layoutAndRouteFromSpecs,
+  recommendedLayouts,
   type SysMLNodeSpec,
   type SysMLRelationshipSpec,
   type SysMLReactFlowNode,
@@ -62,12 +64,11 @@ const AutoLayoutStory = ({
 
   useEffect(() => {
     async function layout() {
-      const initialNodes = createNodesFromSpecs(specs);
-      const initialEdges = createEdgesFromRelationships(relationships);
-      const { nodes: layoutedNodes, edges: layoutedEdges } = await applyRecommendedLayout(
-        initialNodes,
-        initialEdges,
-        diagramType
+      const { nodes: layoutedNodes, edges: layoutedEdges } = await layoutAndRouteFromSpecs(
+        specs,
+        relationships,
+        diagramType,
+        { measure: true }
       );
       setNodes(layoutedNodes);
       setEdges(layoutedEdges);
@@ -306,10 +307,10 @@ const StateMachineStory = ({ background = 'light' }: { background?: 'light' | 'd
         createStateTransitionEdge({ id: 't8', source: 'fault', target: 'standby', trigger: 'faultCleared', effect: 'resetSystem()' })
       ];
 
-      const { nodes: layoutedNodes, edges: layoutedEdges } = await applyRecommendedLayout(
+      const { nodes: layoutedNodes, edges: layoutedEdges } = await layoutAndRoute(
         stateNodes,
         transitions,
-        'stateMachine'
+        { measure: true, ...recommendedLayouts.stateMachine }
       );
       setNodes(layoutedNodes);
       setEdges(layoutedEdges);
@@ -462,10 +463,10 @@ const SequenceDiagramStory = ({ background = 'light' }: { background?: 'light' |
         createSequenceMessageEdge({ id: 'm6', type: 'async', source: 'controller', target: 'driver', label: 'displayReadyStatus()' })
       ];
 
-      const { nodes: layoutedNodes, edges: layoutedEdges } = await applyRecommendedLayout(
+      const { nodes: layoutedNodes, edges: layoutedEdges } = await layoutAndRoute(
         lifelines,
         messages,
-        'sequence'
+        { measure: true, ...recommendedLayouts.sequence }
       );
       setNodes(layoutedNodes);
       setEdges(layoutedEdges);

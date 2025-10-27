@@ -38,6 +38,22 @@ const { nodes: layoutedNodes } = await applyLayout(nodes, edges);
 
 The library supports multiple layout algorithms optimized for different diagram types:
 
+### Layout & Routing Pipeline
+
+Use `layoutAndRouteFromSpecs()` (or `layoutAndRoute()` for pre-created nodes) to measure, layout, and auto-route in a single call:
+
+```typescript
+import { layoutAndRouteFromSpecs } from 'sysml-reactflow';
+
+const { nodes, edges } = await layoutAndRouteFromSpecs(specs, relationships, 'bdd', {
+  measure: true
+});
+
+<SysMLDiagram nodes={nodes} edges={edges} fitView />
+```
+
+When `measure: true`, nodes are rendered offscreen to capture their actual width/height before invoking ELK. This keeps spacing and connector attachments aligned with the real components. For server-side or non-DOM environments, the helper falls back to nominal sizes.
+
 ### 1. Layered (Hierarchical)
 
 **Best for:** BDD, Requirements, Packages, Activity diagrams
