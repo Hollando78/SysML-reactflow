@@ -54,7 +54,7 @@ const getEdgeStyle = (kind?: string) => {
 
   return {
     stroke: color,
-    strokeWidth: 3, // Increased from 2 to 3 for better visibility
+    strokeWidth: 2,
     strokeDasharray
   };
 };
@@ -78,8 +78,8 @@ const SysMLEdgeMarkers = () => {
                 viewBox="0 0 10 10"
                 refX="10"
                 refY="5"
-                markerWidth="10"
-                markerHeight="10"
+                markerWidth="8"
+                markerHeight="8"
                 orient="auto"
               >
                 <path d="M 0 0 L 10 5 L 0 10 z" fill={color} />
@@ -91,8 +91,8 @@ const SysMLEdgeMarkers = () => {
                 viewBox="0 0 10 10"
                 refX="10"
                 refY="5"
-                markerWidth="10"
-                markerHeight="10"
+                markerWidth="8"
+                markerHeight="8"
                 orient="auto"
               >
                 <path d="M 0 0 L 10 5 L 0 10" fill="none" stroke={color} strokeWidth="2" />
@@ -104,8 +104,8 @@ const SysMLEdgeMarkers = () => {
                 viewBox="0 0 12 12"
                 refX="12"
                 refY="6"
-                markerWidth="12"
-                markerHeight="12"
+                markerWidth="10"
+                markerHeight="10"
                 orient="auto"
               >
                 <path d="M 2 2 L 11 6 L 2 10 z" fill="white" stroke={color} strokeWidth="2" />
@@ -117,8 +117,8 @@ const SysMLEdgeMarkers = () => {
                 viewBox="0 0 16 16"
                 refX="2"
                 refY="8"
-                markerWidth="12"
-                markerHeight="12"
+                markerWidth="10"
+                markerHeight="10"
                 orient="auto"
               >
                 <path d="M 2 8 L 8 2 L 14 8 L 8 14 z" fill={color} stroke={color} strokeWidth="2" />
@@ -130,8 +130,8 @@ const SysMLEdgeMarkers = () => {
                 viewBox="0 0 16 16"
                 refX="2"
                 refY="8"
-                markerWidth="12"
-                markerHeight="12"
+                markerWidth="10"
+                markerHeight="10"
                 orient="auto"
               >
                 <path d="M 2 8 L 8 2 L 14 8 L 8 14 z" fill="white" stroke={color} strokeWidth="2" />
@@ -143,8 +143,8 @@ const SysMLEdgeMarkers = () => {
                 viewBox="0 0 10 10"
                 refX="5"
                 refY="5"
-                markerWidth="10"
-                markerHeight="10"
+                markerWidth="8"
+                markerHeight="8"
                 orient="auto"
               >
                 <circle cx="5" cy="5" r="3" fill="white" stroke={color} strokeWidth="2" />
