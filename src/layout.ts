@@ -311,12 +311,7 @@ const structuralEdgeKinds = new Set<string>([
   'variant-membership',
   'type-featuring',
   'feature-chaining',
-  'binding-connector',
-  'allocate',
-  'satisfy',
-  'verify',
-  'refine',
-  'dependency'
+  'binding-connector'
 ]);
 
 function getRoutingModeForEdge(edge: Edge<SysMLEdgeData>): SysMLEdgeRouting {
@@ -529,8 +524,8 @@ export const recommendedLayouts: Record<string, LayoutOptions> = {
    */
   stateMachine: {
     algorithm: 'force',
-    nodeSpacing: 120,
-    layerSpacing: 120
+    nodeSpacing: 140,
+    layerSpacing: 140
   },
 
   /**
