@@ -77,7 +77,7 @@ const defaultOptions: Required<LayoutOptions> = {
   layerSpacing: 100,
   fitView: true,
   nodeWidth: 220,
-  nodeHeight: 150
+  nodeHeight: 180
 };
 
 const elk = new ELK();
