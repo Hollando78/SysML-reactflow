@@ -610,6 +610,28 @@ function collectNodeGeometry(
   });
 }
 
+function cloneNode(node: Node<SysMLNodeData>): Node<SysMLNodeData> {
+  return {
+    ...node,
+    position: node.position ? { ...node.position } : { x: 0, y: 0 }
+  };
+}
+
+function cloneEdge(edge: Edge<SysMLEdgeData>): Edge<SysMLEdgeData> {
+  return {
+    ...edge,
+    data: edge.data ? { ...edge.data } : undefined
+  } as Edge<SysMLEdgeData>;
+}
+
+function byNodeId(a: Node<SysMLNodeData>, b: Node<SysMLNodeData>): number {
+  return a.id.localeCompare(b.id);
+}
+
+function byEdgeId(a: Edge<SysMLEdgeData>, b: Edge<SysMLEdgeData>): number {
+  return a.id.localeCompare(b.id);
+}
+
 /**
  * Recommended layout algorithms for different SysML diagram types
  */
@@ -740,13 +762,44 @@ export async function layoutAndRoute(
   options: LayoutPipelineOptions = {}
 ): Promise<LayoutResult> {
   const { measure = true, ...layoutOptions } = options;
-  let nodeDimensions: NodeDimensionMap | undefined;
+  const nodeClones = nodes.map((node) => cloneNode(node));
+  const edgeClones = edges.map((edge) => cloneEdge(edge));
 
+  const sortedNodes = [...nodeClones].sort(byNodeId);
+  const sortedEdges = [...edgeClones].sort(byEdgeId);
+
+  let nodeDimensions: NodeDimensionMap | undefined;
   if (measure) {
-    nodeDimensions = await measureNodeDimensions(nodes);
+    nodeDimensions = await measureNodeDimensions(sortedNodes);
   }
 
-  return applyLayout(nodes, edges, layoutOptions, nodeDimensions);
+  const { nodes: positionedNodes, edges: positionedEdges } = await applyLayout(
+    sortedNodes,
+    sortedEdges,
+    layoutOptions,
+    nodeDimensions
+  );
+
+  const nodeMap = new Map(positionedNodes.map((node) => [node.id, node]));
+  const edgeMap = new Map(positionedEdges.map((edge) => [edge.id, edge]));
+
+  const finalNodes = nodeClones.map((node) => {
+    const positioned = nodeMap.get(node.id);
+    return positioned ? { ...node, position: positioned.position } : node;
+  });
+
+  const finalEdges = edgeClones.map((edge) => {
+    const positioned = edgeMap.get(edge.id);
+    if (positioned) {
+      return {
+        ...edge,
+        data: positioned.data
+      };
+    }
+    return edge;
+  });
+
+  return { nodes: finalNodes, edges: finalEdges };
 }
 
 export async function layoutAndRouteFromSpecs(
