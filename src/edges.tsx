@@ -76,10 +76,10 @@ const SysMLEdgeMarkers = () => {
               <marker
                 id={`arrow-filled-${colorId}`}
                 viewBox="0 0 10 10"
-                refX="9"
+                refX="10"
                 refY="5"
-                markerWidth="6"
-                markerHeight="6"
+                markerWidth="10"
+                markerHeight="10"
                 orient="auto"
               >
                 <path d="M 0 0 L 10 5 L 0 10 z" fill={color} />
@@ -89,52 +89,52 @@ const SysMLEdgeMarkers = () => {
               <marker
                 id={`arrow-open-${colorId}`}
                 viewBox="0 0 10 10"
-                refX="9"
+                refX="10"
                 refY="5"
-                markerWidth="6"
-                markerHeight="6"
+                markerWidth="10"
+                markerHeight="10"
                 orient="auto"
               >
-                <path d="M 0 0 L 10 5 L 0 10" fill="none" stroke={color} strokeWidth="1.5" />
+                <path d="M 0 0 L 10 5 L 0 10" fill="none" stroke={color} strokeWidth="2" />
               </marker>
 
               {/* Hollow triangle for specialization/generalization */}
               <marker
                 id={`arrow-triangle-hollow-${colorId}`}
                 viewBox="0 0 12 12"
-                refX="11"
+                refX="12"
                 refY="6"
-                markerWidth="8"
-                markerHeight="8"
+                markerWidth="12"
+                markerHeight="12"
                 orient="auto"
               >
-                <path d="M 2 2 L 11 6 L 2 10 z" fill="white" stroke={color} strokeWidth="1.5" />
+                <path d="M 2 2 L 11 6 L 2 10 z" fill="white" stroke={color} strokeWidth="2" />
               </marker>
 
-              {/* Filled diamond for composition */}
+              {/* Filled diamond for composition (at source) */}
               <marker
                 id={`diamond-filled-${colorId}`}
-                viewBox="0 0 12 12"
-                refX="11"
-                refY="6"
-                markerWidth="8"
-                markerHeight="8"
+                viewBox="0 0 16 16"
+                refX="2"
+                refY="8"
+                markerWidth="12"
+                markerHeight="12"
                 orient="auto"
               >
-                <path d="M 2 6 L 6 2 L 10 6 L 6 10 z" fill={color} stroke={color} strokeWidth="1.5" />
+                <path d="M 2 8 L 8 2 L 14 8 L 8 14 z" fill={color} stroke={color} strokeWidth="2" />
               </marker>
 
-              {/* Hollow diamond for aggregation */}
+              {/* Hollow diamond for aggregation (at source) */}
               <marker
                 id={`diamond-hollow-${colorId}`}
-                viewBox="0 0 12 12"
-                refX="11"
-                refY="6"
-                markerWidth="8"
-                markerHeight="8"
+                viewBox="0 0 16 16"
+                refX="2"
+                refY="8"
+                markerWidth="12"
+                markerHeight="12"
                 orient="auto"
               >
-                <path d="M 2 6 L 6 2 L 10 6 L 6 10 z" fill="white" stroke={color} strokeWidth="1.5" />
+                <path d="M 2 8 L 8 2 L 14 8 L 8 14 z" fill="white" stroke={color} strokeWidth="2" />
               </marker>
 
               {/* Circle for port connections */}
@@ -143,11 +143,11 @@ const SysMLEdgeMarkers = () => {
                 viewBox="0 0 10 10"
                 refX="5"
                 refY="5"
-                markerWidth="6"
-                markerHeight="6"
+                markerWidth="10"
+                markerHeight="10"
                 orient="auto"
               >
-                <circle cx="5" cy="5" r="3" fill="white" stroke={color} strokeWidth="1.5" />
+                <circle cx="5" cy="5" r="3" fill="white" stroke={color} strokeWidth="2" />
               </marker>
             </g>
           );
@@ -157,9 +157,24 @@ const SysMLEdgeMarkers = () => {
   );
 };
 
-// Get appropriate marker for relationship type
-const getMarkerEnd = (kind?: string): string => {
-  const color = kind ? edgeColors[kind] ?? '#f4f4f4' : '#f4f4f4';
+// Get appropriate marker for START (source) of relationship
+const getMarkerStart = (kind?: string): string | undefined => {
+  const color = kind ? edgeColors[kind] ?? '#8d8d8d' : '#8d8d8d';
+  const colorId = color.replace('#', '');
+
+  switch (kind) {
+    case 'composition':
+      return `url(#diamond-filled-${colorId})`;
+    case 'aggregation':
+      return `url(#diamond-hollow-${colorId})`;
+    default:
+      return undefined;
+  }
+};
+
+// Get appropriate marker for END (target) of relationship
+const getMarkerEnd = (kind?: string): string | undefined => {
+  const color = kind ? edgeColors[kind] ?? '#8d8d8d' : '#8d8d8d';
   const colorId = color.replace('#', '');
 
   switch (kind) {
@@ -167,9 +182,9 @@ const getMarkerEnd = (kind?: string): string => {
     case 'conjugation':
       return `url(#arrow-triangle-hollow-${colorId})`;
     case 'composition':
-      return `url(#diamond-filled-${colorId})`;
     case 'aggregation':
-      return `url(#diamond-hollow-${colorId})`;
+      // Diamonds are at the start (source), not end
+      return undefined;
     case 'feature-typing':
     case 'subsetting':
     case 'redefinition':
@@ -220,6 +235,7 @@ const SysMLEdgeComponent = memo((props: EdgeProps<SysMLEdgeData>) => {
       });
 
   const style = getEdgeStyle(data?.kind);
+  const markerStart = getMarkerStart(data?.kind);
   const markerEnd = getMarkerEnd(data?.kind);
 
   return (
@@ -228,6 +244,7 @@ const SysMLEdgeComponent = memo((props: EdgeProps<SysMLEdgeData>) => {
         id={id}
         path={edgePath}
         style={style}
+        markerStart={markerStart}
         markerEnd={markerEnd}
       />
       {data?.label && (
