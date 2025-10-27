@@ -27,6 +27,13 @@ export async function measureNodeDimensions(nodes: SysMLReactFlowNode[]): Promis
     return {};
   }
 
+  // Clone nodes so React Flow measurement does not mutate caller state
+  const measurementNodes: SysMLReactFlowNode[] = nodes.map((node) => ({
+    ...node,
+    position: node.position ? { ...node.position } : { x: 0, y: 0 },
+    data: node.data
+  }));
+
   const container = document.createElement('div');
   container.style.position = 'absolute';
   container.style.left = '-10000px';
@@ -44,7 +51,7 @@ export async function measureNodeDimensions(nodes: SysMLReactFlowNode[]): Promis
       <ReactFlowProvider>
         <div style={{ width: 2200, height: 2200 }}>
           <ReactFlow
-            nodes={nodes}
+            nodes={measurementNodes}
             edges={noopEdges}
             nodeTypes={sysmlNodeTypes}
             edgeTypes={sysmlEdgeTypes}

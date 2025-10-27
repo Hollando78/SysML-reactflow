@@ -240,7 +240,8 @@ function getElkOptions(opts: Required<LayoutOptions>): Record<string, string> {
         ...baseOptions,
         'elk.algorithm': 'force',
         'elk.force.repulsion': '200.0',
-        'elk.force.attraction': '0.1'
+        'elk.force.attraction': '0.1',
+        'elk.force.randomSeed': '42'
       };
 
     case 'mrtree':
