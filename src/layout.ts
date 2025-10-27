@@ -643,8 +643,8 @@ export const recommendedLayouts: Record<string, LayoutOptions> = {
   bdd: {
     algorithm: 'layered',
     direction: 'DOWN',
-    nodeSpacing: 120,
-    layerSpacing: 160
+    nodeSpacing: 70,
+    layerSpacing: 100
   },
 
   /**
@@ -653,8 +653,8 @@ export const recommendedLayouts: Record<string, LayoutOptions> = {
    */
   ibd: {
     algorithm: 'box',
-    nodeSpacing: 80,
-    layerSpacing: 80
+    nodeSpacing: 50,
+    layerSpacing: 50
   },
 
   /**
@@ -664,8 +664,8 @@ export const recommendedLayouts: Record<string, LayoutOptions> = {
   requirements: {
     algorithm: 'layered',
     direction: 'DOWN',
-    nodeSpacing: 110,
-    layerSpacing: 150
+    nodeSpacing: 65,
+    layerSpacing: 90
   },
 
   /**
@@ -674,8 +674,8 @@ export const recommendedLayouts: Record<string, LayoutOptions> = {
    */
   stateMachine: {
     algorithm: 'force',
-    nodeSpacing: 110,
-    layerSpacing: 110
+    nodeSpacing: 70,
+    layerSpacing: 70
   },
 
   /**
@@ -685,8 +685,8 @@ export const recommendedLayouts: Record<string, LayoutOptions> = {
   activity: {
     algorithm: 'layered',
     direction: 'DOWN',
-    nodeSpacing: 100,
-    layerSpacing: 130
+    nodeSpacing: 60,
+    layerSpacing: 80
   },
 
   /**
@@ -695,8 +695,8 @@ export const recommendedLayouts: Record<string, LayoutOptions> = {
    */
   sequence: {
     algorithm: 'sequence',
-    nodeSpacing: 300,
-    layerSpacing: 110,
+    nodeSpacing: 200,
+    layerSpacing: 70,
     nodeWidth: 200,
     nodeHeight: 100
   },
@@ -707,8 +707,8 @@ export const recommendedLayouts: Record<string, LayoutOptions> = {
    */
   useCase: {
     algorithm: 'force',
-    nodeSpacing: 140,
-    layerSpacing: 140
+    nodeSpacing: 90,
+    layerSpacing: 90
   },
 
   /**
@@ -718,8 +718,8 @@ export const recommendedLayouts: Record<string, LayoutOptions> = {
   package: {
     algorithm: 'mrtree',
     direction: 'DOWN',
-    nodeSpacing: 100,
-    layerSpacing: 120
+    nodeSpacing: 60,
+    layerSpacing: 75
   }
 };
 
