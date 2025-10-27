@@ -284,11 +284,11 @@ const StateMachineStory = ({ background = 'light' }: { background?: 'light' | 'd
   useEffect(() => {
     async function layout() {
       const stateNodes = [
-        createStateNode({ id: 'off', name: 'Off', entry: 'disablePower()', exit: 'logStateChange()' }, { x: 0, y: 0 }),
-        createStateNode({ id: 'standby', name: 'Standby', entry: 'enableMonitoring()', do: 'monitorBattery()', exit: 'logStateChange()' }, { x: 0, y: 0 }),
-        createStateNode({ id: 'ready', name: 'Ready', entry: 'initializeSystems()', do: 'checkSafety()', exit: 'logStateChange()' }, { x: 0, y: 0 }),
-        createStateNode({ id: 'active', name: 'Active', entry: 'enableDrive()', do: 'controlMotor()', exit: 'disableDrive()' }, { x: 0, y: 0 }),
-        createStateNode({ id: 'fault', name: 'Fault', entry: 'triggerAlarm()', do: 'logError()', exit: 'clearFault()' }, { x: 0, y: 0 })
+        createStateNode({ id: 'off', name: 'Off', entryAction: 'disablePower()', exitAction: 'logStateChange()' }, { x: 0, y: 0 }),
+        createStateNode({ id: 'standby', name: 'Standby', entryAction: 'enableMonitoring()', doActivity: 'monitorBattery()', exitAction: 'logStateChange()' }, { x: 0, y: 0 }),
+        createStateNode({ id: 'ready', name: 'Ready', entryAction: 'initializeSystems()', doActivity: 'checkSafety()', exitAction: 'logStateChange()' }, { x: 0, y: 0 }),
+        createStateNode({ id: 'active', name: 'Active', entryAction: 'enableDrive()', doActivity: 'controlMotor()', exitAction: 'disableDrive()' }, { x: 0, y: 0 }),
+        createStateNode({ id: 'fault', name: 'Fault', entryAction: 'triggerAlarm()', doActivity: 'logError()', exitAction: 'clearFault()' }, { x: 0, y: 0 })
       ];
 
       const transitions = [
