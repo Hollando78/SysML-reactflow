@@ -635,3 +635,338 @@ export const UseCaseDiagram_Dark: Story = {
     }
   }
 };
+
+// ============================================================================
+// Specialization Hierarchy - Hollow Triangle Markers
+// ============================================================================
+
+const specializationSpecs: SysMLNodeSpec[] = [
+  {
+    kind: 'part-definition',
+    spec: {
+      id: 'vehicle-base',
+      name: 'Vehicle',
+      description: 'Base vehicle definition',
+      attributes: [
+        { name: 'vin', type: 'String' },
+        { name: 'mass', type: 'Real', multiplicity: '[kg]' }
+      ]
+    }
+  },
+  {
+    kind: 'part-definition',
+    spec: {
+      id: 'electric-vehicle',
+      name: 'ElectricVehicle',
+      description: 'Electric vehicle specialization',
+      attributes: [
+        { name: 'batteryCapacity', type: 'Real', multiplicity: '[kWh]' },
+        { name: 'range', type: 'Real', multiplicity: '[km]' }
+      ]
+    }
+  },
+  {
+    kind: 'part-definition',
+    spec: {
+      id: 'hybrid-vehicle',
+      name: 'HybridVehicle',
+      description: 'Hybrid vehicle specialization',
+      attributes: [
+        { name: 'fuelCapacity', type: 'Real', multiplicity: '[L]' },
+        { name: 'electricRange', type: 'Real', multiplicity: '[km]' }
+      ]
+    }
+  },
+  {
+    kind: 'part-definition',
+    spec: {
+      id: 'sedan',
+      name: 'ElectricSedan',
+      description: 'Electric sedan variant',
+      attributes: [
+        { name: 'seatingCapacity', type: 'Integer' }
+      ]
+    }
+  },
+  {
+    kind: 'part-definition',
+    spec: {
+      id: 'suv',
+      name: 'ElectricSUV',
+      description: 'Electric SUV variant',
+      attributes: [
+        { name: 'cargoVolume', type: 'Real', multiplicity: '[L]' }
+      ]
+    }
+  }
+];
+
+const specializationRelationships: SysMLRelationshipSpec[] = [
+  { id: 'e1', type: 'specialization', source: 'electric-vehicle', target: 'vehicle-base', label: 'specializes' },
+  { id: 'e2', type: 'specialization', source: 'hybrid-vehicle', target: 'vehicle-base', label: 'specializes' },
+  { id: 'e3', type: 'specialization', source: 'sedan', target: 'electric-vehicle', label: 'specializes' },
+  { id: 'e4', type: 'specialization', source: 'suv', target: 'electric-vehicle', label: 'specializes' }
+];
+
+export const SpecializationHierarchy_Light: Story = {
+  render: () => <AutoLayoutStory specs={specializationSpecs} relationships={specializationRelationships} diagramType="bdd" background="light" />,
+  parameters: {
+    docs: {
+      description: {
+        story: 'Specialization hierarchy showing inheritance with hollow triangle markers (white triangles pointing to parent). Demonstrates proper UML/SysML generalization notation. Light mode.'
+      }
+    }
+  }
+};
+
+export const SpecializationHierarchy_Dark: Story = {
+  render: () => <AutoLayoutStory specs={specializationSpecs} relationships={specializationRelationships} diagramType="bdd" background="dark" />,
+  parameters: {
+    docs: {
+      description: {
+        story: 'Specialization hierarchy showing inheritance with hollow triangle markers (white triangles pointing to parent). Demonstrates proper UML/SysML generalization notation. Dark mode.'
+      }
+    }
+  }
+};
+
+// ============================================================================
+// Composition vs Aggregation - Diamond Markers
+// ============================================================================
+
+const compositionAggregationSpecs: SysMLNodeSpec[] = [
+  {
+    kind: 'part-definition',
+    spec: {
+      id: 'car',
+      name: 'Car',
+      description: 'Complete vehicle'
+    }
+  },
+  {
+    kind: 'part-definition',
+    spec: {
+      id: 'engine',
+      name: 'Engine',
+      description: 'Cannot exist without car (composition)'
+    }
+  },
+  {
+    kind: 'part-definition',
+    spec: {
+      id: 'chassis',
+      name: 'Chassis',
+      description: 'Cannot exist without car (composition)'
+    }
+  },
+  {
+    kind: 'part-definition',
+    spec: {
+      id: 'wheel',
+      name: 'Wheel',
+      description: 'Can exist independently (aggregation)',
+      attributes: [
+        { name: 'diameter', type: 'Real', multiplicity: '[inch]' }
+      ]
+    }
+  },
+  {
+    kind: 'part-definition',
+    spec: {
+      id: 'battery',
+      name: 'Battery',
+      description: 'Can be removed/replaced (aggregation)',
+      attributes: [
+        { name: 'capacity', type: 'Real', multiplicity: '[kWh]' }
+      ]
+    }
+  }
+];
+
+const compositionAggregationRelationships: SysMLRelationshipSpec[] = [
+  { id: 'e1', type: 'composition', source: 'car', target: 'engine', label: '◆ composition' },
+  { id: 'e2', type: 'composition', source: 'car', target: 'chassis', label: '◆ composition' },
+  { id: 'e3', type: 'aggregation', source: 'car', target: 'wheel', label: '◇ aggregation [4]' },
+  { id: 'e4', type: 'aggregation', source: 'car', target: 'battery', label: '◇ aggregation' }
+];
+
+export const CompositionVsAggregation_Light: Story = {
+  render: () => <AutoLayoutStory specs={compositionAggregationSpecs} relationships={compositionAggregationRelationships} diagramType="bdd" background="light" />,
+  parameters: {
+    docs: {
+      description: {
+        story: 'Demonstrates the difference between composition (filled black diamond) and aggregation (hollow white diamond). Composition indicates strong ownership where parts cannot exist without the whole. Light mode.'
+      }
+    }
+  }
+};
+
+export const CompositionVsAggregation_Dark: Story = {
+  render: () => <AutoLayoutStory specs={compositionAggregationSpecs} relationships={compositionAggregationRelationships} diagramType="bdd" background="dark" />,
+  parameters: {
+    docs: {
+      description: {
+        story: 'Demonstrates the difference between composition (filled black diamond) and aggregation (hollow white diamond). Composition indicates strong ownership where parts cannot exist without the whole. Dark mode.'
+      }
+    }
+  }
+};
+
+// ============================================================================
+// Multi-Directional Connections - Showcasing 4-Way Handles
+// ============================================================================
+
+const multiDirectionalSpecs: SysMLNodeSpec[] = [
+  {
+    kind: 'part-definition',
+    spec: {
+      id: 'center',
+      name: 'CentralHub',
+      description: 'Connects to all directions'
+    }
+  },
+  {
+    kind: 'part-definition',
+    spec: {
+      id: 'north',
+      name: 'NorthComponent',
+      description: 'Connected from top'
+    }
+  },
+  {
+    kind: 'part-definition',
+    spec: {
+      id: 'east',
+      name: 'EastComponent',
+      description: 'Connected from right'
+    }
+  },
+  {
+    kind: 'part-definition',
+    spec: {
+      id: 'south',
+      name: 'SouthComponent',
+      description: 'Connected from bottom'
+    }
+  },
+  {
+    kind: 'part-definition',
+    spec: {
+      id: 'west',
+      name: 'WestComponent',
+      description: 'Connected from left'
+    }
+  }
+];
+
+const multiDirectionalRelationships: SysMLRelationshipSpec[] = [
+  { id: 'e1', type: 'composition', source: 'center', target: 'north', label: 'top' },
+  { id: 'e2', type: 'composition', source: 'center', target: 'east', label: 'right' },
+  { id: 'e3', type: 'composition', source: 'center', target: 'south', label: 'bottom' },
+  { id: 'e4', type: 'composition', source: 'center', target: 'west', label: 'left' }
+];
+
+export const MultiDirectionalConnections_Light: Story = {
+  render: () => <AutoLayoutStory specs={multiDirectionalSpecs} relationships={multiDirectionalRelationships} diagramType="bdd" background="light" />,
+  parameters: {
+    docs: {
+      description: {
+        story: 'Demonstrates 4-way connection handles with orthogonal routing. Each node can connect from top, right, bottom, or left. React Flow automatically selects optimal connection points. Light mode.'
+      }
+    }
+  }
+};
+
+export const MultiDirectionalConnections_Dark: Story = {
+  render: () => <AutoLayoutStory specs={multiDirectionalSpecs} relationships={multiDirectionalRelationships} diagramType="bdd" background="dark" />,
+  parameters: {
+    docs: {
+      description: {
+        story: 'Demonstrates 4-way connection handles with orthogonal routing. Each node can connect from top, right, bottom, or left. React Flow automatically selects optimal connection points. Dark mode.'
+      }
+    }
+  }
+};
+
+// ============================================================================
+// Complex Relationship Graph - All Edge Types
+// ============================================================================
+
+const complexSpecs: SysMLNodeSpec[] = [
+  {
+    kind: 'requirement-usage',
+    spec: {
+      id: 'req-perf',
+      name: 'Performance Requirement',
+      text: 'System shall achieve target performance',
+      status: 'approved'
+    }
+  },
+  {
+    kind: 'part-definition',
+    spec: {
+      id: 'system',
+      name: 'VehicleSystem',
+      description: 'Main system definition',
+      attributes: [
+        { name: 'systemId', type: 'String' }
+      ]
+    }
+  },
+  {
+    kind: 'part-definition',
+    spec: {
+      id: 'subsystem',
+      name: 'PowertrainSubsystem',
+      description: 'Subsystem specialization'
+    }
+  },
+  {
+    kind: 'action-definition',
+    spec: {
+      id: 'action-ctrl',
+      name: 'ControlPower',
+      description: 'Control action',
+      inputs: [{ name: 'demand', type: 'Real' }],
+      outputs: [{ name: 'power', type: 'Real' }]
+    }
+  },
+  {
+    kind: 'constraint-definition',
+    spec: {
+      id: 'constraint',
+      name: 'PowerConstraint',
+      description: 'power <= maxPower'
+    }
+  }
+];
+
+const complexRelationships: SysMLRelationshipSpec[] = [
+  { id: 'e1', type: 'satisfy', source: 'system', target: 'req-perf', label: 'satisfies' },
+  { id: 'e2', type: 'specialization', source: 'subsystem', target: 'system', label: 'specializes' },
+  { id: 'e3', type: 'allocate', source: 'subsystem', target: 'action-ctrl', label: 'allocates' },
+  { id: 'e4', type: 'refine', source: 'action-ctrl', target: 'constraint', label: 'refines' },
+  { id: 'e5', type: 'verify', source: 'action-ctrl', target: 'req-perf', label: 'verifies' }
+];
+
+export const ComplexRelationshipGraph_Light: Story = {
+  render: () => <AutoLayoutStory specs={complexSpecs} relationships={complexRelationships} diagramType="requirements" background="light" />,
+  parameters: {
+    docs: {
+      description: {
+        story: 'Complex graph showing multiple SysML relationship types: satisfy (open arrow, dashed), specialization (hollow triangle), allocate (open arrow, dashed), refine (open arrow, dashed), verify (open arrow, dashed). Demonstrates comprehensive edge marker support. Light mode.'
+      }
+    }
+  }
+};
+
+export const ComplexRelationshipGraph_Dark: Story = {
+  render: () => <AutoLayoutStory specs={complexSpecs} relationships={complexRelationships} diagramType="requirements" background="dark" />,
+  parameters: {
+    docs: {
+      description: {
+        story: 'Complex graph showing multiple SysML relationship types: satisfy (open arrow, dashed), specialization (hollow triangle), allocate (open arrow, dashed), refine (open arrow, dashed), verify (open arrow, dashed). Demonstrates comprehensive edge marker support. Dark mode.'
+      }
+    }
+  }
+};
