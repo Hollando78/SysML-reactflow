@@ -221,7 +221,7 @@ const buildGeometry = (
   fallbackX: number,
   fallbackY: number
 ): NodeGeometry => {
-  if (!node || node.width === undefined || node.height === undefined || !node.positionAbsolute) {
+  if (!node || node.width == null || node.height == null || !node.positionAbsolute) {
     return {
       center: { x: fallbackX, y: fallbackY },
       anchors: {
