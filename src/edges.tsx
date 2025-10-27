@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import type { EdgeProps, EdgeTypes } from 'reactflow';
-import { BaseEdge, EdgeLabelRenderer, getSmoothStepPath, getStraightPath } from 'reactflow';
+import { BaseEdge, EdgeLabelRenderer, Position, getSmoothStepPath, getStraightPath } from 'reactflow';
 
 import type { SysMLEdgeData } from './types';
 
@@ -215,6 +215,27 @@ const SysMLEdgeComponent = memo((props: EdgeProps<SysMLEdgeData>) => {
   const { id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, data } = props;
 
   const pathType = getPathType(data?.kind);
+  const dx = targetX - sourceX;
+  const dy = targetY - sourceY;
+  const horizontalDominant = Math.abs(dx) >= Math.abs(dy);
+  const autoSourcePosition =
+    sourcePosition ??
+    (horizontalDominant
+      ? dx >= 0
+        ? Position.Right
+        : Position.Left
+      : dy >= 0
+        ? Position.Bottom
+        : Position.Top);
+  const autoTargetPosition =
+    targetPosition ??
+    (horizontalDominant
+      ? dx >= 0
+        ? Position.Left
+        : Position.Right
+      : dy >= 0
+        ? Position.Top
+        : Position.Bottom);
 
   // Use appropriate path based on relationship type
   const [edgePath, labelX, labelY] = pathType === 'smooth'
@@ -223,8 +244,8 @@ const SysMLEdgeComponent = memo((props: EdgeProps<SysMLEdgeData>) => {
         sourceY,
         targetX,
         targetY,
-        sourcePosition,
-        targetPosition,
+        sourcePosition: autoSourcePosition,
+        targetPosition: autoTargetPosition,
         borderRadius: 8
       })
     : getStraightPath({
