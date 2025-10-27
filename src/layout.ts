@@ -77,14 +77,23 @@ export interface LayoutOptions {
 const defaultOptions: Required<LayoutOptions> = {
   algorithm: 'layered',
   direction: 'DOWN',
-  nodeSpacing: 100,
-  layerSpacing: 120,
+  nodeSpacing: 90,
+  layerSpacing: 130,
   fitView: true,
   nodeWidth: 220,
   nodeHeight: 150
 };
 
 const elk = new ELK();
+
+interface NodeGeometry {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  centerX: number;
+  centerY: number;
+}
 
 /**
  * Apply automatic layout to a set of React Flow nodes and edges
@@ -159,7 +168,10 @@ export async function applyLayout(
   // Run ELK layout
   const layoutedGraph = await elk.layout(elkGraph);
 
-  const routedEdges = extractEdgeRoutes(layoutedGraph, edgeRoutingModes);
+  const geometryMap = new Map<string, NodeGeometry>();
+  collectNodeGeometry(layoutedGraph, geometryMap, nodeDimensions, opts);
+
+  const routedEdges = extractEdgeRoutes(layoutedGraph, edgeRoutingModes, geometryMap);
 
   // Apply positions back to React Flow nodes
   const layoutedNodes = nodes.map((node) => {
@@ -306,7 +318,8 @@ function getRoutingModeForEdge(edge: Edge<SysMLEdgeData>): SysMLEdgeRouting {
 
 function extractEdgeRoutes(
   graph: ElkNode,
-  routingModes: Map<string, SysMLEdgeRouting>
+  routingModes: Map<string, SysMLEdgeRouting>,
+  geometry: Map<string, NodeGeometry>
 ): Map<string, SysMLEdgeRoute> {
   const routes = new Map<string, SysMLEdgeRoute>();
   const elkEdges = collectEdges(graph);
@@ -327,7 +340,15 @@ function extractEdgeRoutes(
 
     if (points.length >= 2) {
       const routing = routingModes.get(edge.id) ?? 'spline';
-      routes.set(edge.id, { points, routing });
+      const sourceId = edge.sources?.[0];
+      const targetId = edge.targets?.[0];
+      const sourceGeom = sourceId ? geometry.get(sourceId) : undefined;
+      const targetGeom = targetId ? geometry.get(targetId) : undefined;
+      const adjustedPoints =
+        routing === 'spline'
+          ? adjustSplineRoute(points, sourceGeom, targetGeom)
+          : points;
+      routes.set(edge.id, { points: adjustedPoints, routing });
     }
   });
 
@@ -352,6 +373,96 @@ function pushPoint(points: SysMLRoutePoint[], point?: { x: number; y: number } |
   }
 }
 
+function adjustSplineRoute(
+  points: SysMLRoutePoint[],
+  source?: NodeGeometry,
+  target?: NodeGeometry
+): SysMLRoutePoint[] {
+  const adjusted = points.map((pt) => ({ ...pt }));
+
+  if (source && adjusted.length >= 2) {
+    adjusted[0] = projectToBoundary(adjusted[0], adjusted[1], source);
+  }
+
+  if (target && adjusted.length >= 2) {
+    const lastIndex = adjusted.length - 1;
+    adjusted[lastIndex] = projectToBoundary(adjusted[lastIndex], adjusted[lastIndex - 1], target);
+  }
+
+  return adjusted;
+}
+
+function projectToBoundary(
+  boundaryPoint: SysMLRoutePoint,
+  referencePoint: SysMLRoutePoint,
+  geom: NodeGeometry
+): SysMLRoutePoint {
+  const { centerX, centerY, x, y, width, height } = geom;
+  let dx = boundaryPoint.x - centerX;
+  let dy = boundaryPoint.y - centerY;
+
+  if (dx === 0 && dy === 0) {
+    dx = referencePoint.x - centerX;
+    dy = referencePoint.y - centerY;
+  }
+
+  if (dx === 0 && dy === 0) {
+    return { x: centerX, y: centerY };
+  }
+
+  const left = x;
+  const right = x + width;
+  const top = y;
+  const bottom = y + height;
+
+  const candidates: number[] = [];
+
+  if (dx > 0) {
+    candidates.push((right - centerX) / dx);
+  } else if (dx < 0) {
+    candidates.push((left - centerX) / dx);
+  }
+
+  if (dy > 0) {
+    candidates.push((bottom - centerY) / dy);
+  } else if (dy < 0) {
+    candidates.push((top - centerY) / dy);
+  }
+
+  const positiveCandidates = candidates.filter((t) => t > 0);
+  const t = positiveCandidates.length > 0 ? Math.min(...positiveCandidates) : 1;
+
+  return {
+    x: centerX + dx * t,
+    y: centerY + dy * t
+  };
+}
+
+function collectNodeGeometry(
+  graph: ElkNode,
+  geometry: Map<string, NodeGeometry>,
+  dimensions: NodeDimensionMap | undefined,
+  opts: Required<LayoutOptions>
+): void {
+  graph.children?.forEach((child) => {
+    const width = dimensions?.[child.id]?.width ?? child.width ?? opts.nodeWidth;
+    const height = dimensions?.[child.id]?.height ?? child.height ?? opts.nodeHeight;
+    const x = child.x ?? 0;
+    const y = child.y ?? 0;
+
+    geometry.set(child.id, {
+      x,
+      y,
+      width,
+      height,
+      centerX: x + width / 2,
+      centerY: y + height / 2
+    });
+
+    collectNodeGeometry(child, geometry, dimensions, opts);
+  });
+}
+
 /**
  * Recommended layout algorithms for different SysML diagram types
  */
@@ -363,8 +474,8 @@ export const recommendedLayouts: Record<string, LayoutOptions> = {
   bdd: {
     algorithm: 'layered',
     direction: 'DOWN',
-    nodeSpacing: 140,
-    layerSpacing: 180
+    nodeSpacing: 120,
+    layerSpacing: 160
   },
 
   /**
@@ -384,8 +495,8 @@ export const recommendedLayouts: Record<string, LayoutOptions> = {
   requirements: {
     algorithm: 'layered',
     direction: 'DOWN',
-    nodeSpacing: 130,
-    layerSpacing: 160
+    nodeSpacing: 110,
+    layerSpacing: 150
   },
 
   /**
@@ -394,8 +505,8 @@ export const recommendedLayouts: Record<string, LayoutOptions> = {
    */
   stateMachine: {
     algorithm: 'force',
-    nodeSpacing: 160,
-    layerSpacing: 160
+    nodeSpacing: 140,
+    layerSpacing: 140
   },
 
   /**
@@ -405,8 +516,8 @@ export const recommendedLayouts: Record<string, LayoutOptions> = {
   activity: {
     algorithm: 'layered',
     direction: 'DOWN',
-    nodeSpacing: 110,
-    layerSpacing: 140
+    nodeSpacing: 100,
+    layerSpacing: 130
   },
 
   /**
@@ -415,8 +526,8 @@ export const recommendedLayouts: Record<string, LayoutOptions> = {
    */
   sequence: {
     algorithm: 'sequence',
-    nodeSpacing: 320,
-    layerSpacing: 120,
+    nodeSpacing: 300,
+    layerSpacing: 110,
     nodeWidth: 200,
     nodeHeight: 100
   },
@@ -427,8 +538,8 @@ export const recommendedLayouts: Record<string, LayoutOptions> = {
    */
   useCase: {
     algorithm: 'force',
-    nodeSpacing: 150,
-    layerSpacing: 150
+    nodeSpacing: 140,
+    layerSpacing: 140
   },
 
   /**
