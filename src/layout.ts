@@ -76,7 +76,7 @@ const defaultOptions: Required<LayoutOptions> = {
   nodeSpacing: 80,
   layerSpacing: 100,
   fitView: true,
-  nodeWidth: 250,
+  nodeWidth: 220,
   nodeHeight: 150
 };
 
