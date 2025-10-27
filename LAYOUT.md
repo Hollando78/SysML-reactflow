@@ -28,10 +28,10 @@ const edges = createEdgesFromRelationships([
 ]);
 
 // Apply automatic layout
-const layoutedNodes = await applyLayout(nodes, edges);
+const { nodes: layoutedNodes } = await applyLayout(nodes, edges);
 
 // Render with positioned nodes
-<SysMLDiagram nodes={layoutedNodes} edges={edges} fitView />
+<SysMLDiagram nodes={layoutedNodes} edges={layoutedEdges} fitView />
 ```
 
 ## Layout Algorithms
@@ -45,7 +45,7 @@ The library supports multiple layout algorithms optimized for different diagram 
 Arranges nodes in horizontal layers based on their connections. Minimizes edge crossings and provides a clear flow direction.
 
 ```typescript
-const layoutedNodes = await applyLayout(nodes, edges, {
+const { nodes: layoutedNodes, edges: layoutedEdges } = await applyLayout(nodes, edges, {
   algorithm: 'layered',
   direction: 'DOWN',      // DOWN, UP, LEFT, RIGHT
   nodeSpacing: 100,       // Horizontal spacing between nodes
@@ -66,7 +66,7 @@ const layoutedNodes = await applyLayout(nodes, edges, {
 Uses physics-based simulation to position nodes. Connected nodes attract each other, while all nodes repel each other for even spacing.
 
 ```typescript
-const layoutedNodes = await applyLayout(nodes, edges, {
+const { nodes: layoutedNodes, edges: layoutedEdges } = await applyLayout(nodes, edges, {
   algorithm: 'force',
   nodeSpacing: 120
 });
@@ -85,7 +85,7 @@ const layoutedNodes = await applyLayout(nodes, edges, {
 Optimized for tree structures that may have multiple roots. Provides clean hierarchical visualization.
 
 ```typescript
-const layoutedNodes = await applyLayout(nodes, edges, {
+const { nodes: layoutedNodes, edges: layoutedEdges } = await applyLayout(nodes, edges, {
   algorithm: 'mrtree',
   direction: 'DOWN',
   nodeSpacing: 100,
@@ -105,7 +105,7 @@ const layoutedNodes = await applyLayout(nodes, edges, {
 Packs nodes into compact rectangular regions with orthogonal routing.
 
 ```typescript
-const layoutedNodes = await applyLayout(nodes, edges, {
+const { nodes: layoutedNodes, edges: layoutedEdges } = await applyLayout(nodes, edges, {
   algorithm: 'box',
   nodeSpacing: 80,
   layerSpacing: 80
@@ -124,7 +124,7 @@ const layoutedNodes = await applyLayout(nodes, edges, {
 Custom layout specifically for sequence diagrams. Arranges lifelines horizontally with equal spacing.
 
 ```typescript
-const layoutedNodes = await applyLayout(nodes, edges, {
+const { nodes: layoutedNodes, edges: layoutedEdges } = await applyLayout(nodes, edges, {
   algorithm: 'sequence',
   nodeSpacing: 280,       // Spacing between lifelines
   nodeWidth: 200,         // Lifeline width
@@ -260,9 +260,9 @@ const nodes = createNodesFromSpecs(specs);
 const edges = createEdgesFromRelationships(relationships);
 
 // Apply recommended layout for requirements
-const layoutedNodes = await applyRecommendedLayout(nodes, edges, 'requirements');
+const { nodes: layoutedNodes, edges: layoutedEdges } = await applyRecommendedLayout(nodes, edges, 'requirements');
 
-<SysMLDiagram nodes={layoutedNodes} edges={edges} />
+<SysMLDiagram nodes={layoutedNodes} edges={layoutedEdges} />
 ```
 
 ### Example 2: State Machine
@@ -285,9 +285,9 @@ const transitions = [
 const nodes = createNodesFromSpecs(states);
 
 // Force-directed layout works well for state machines
-const layoutedNodes = await applyRecommendedLayout(nodes, transitions, 'stateMachine');
+const { nodes: layoutedNodes, edges: layoutedEdges } = await applyRecommendedLayout(nodes, transitions, 'stateMachine');
 
-<SysMLDiagram nodes={layoutedNodes} edges={transitions} />
+<SysMLDiagram nodes={layoutedNodes} edges={layoutedEdges} />
 ```
 
 ### Example 3: Block Definition Diagram
@@ -310,9 +310,9 @@ const nodes = createNodesFromSpecs(blocks);
 const edges = createEdgesFromRelationships(relationships);
 
 // Hierarchical layout for BDD
-const layoutedNodes = await applyRecommendedLayout(nodes, edges, 'bdd');
+const { nodes: layoutedNodes, edges: layoutedEdges } = await applyRecommendedLayout(nodes, edges, 'bdd');
 
-<SysMLDiagram nodes={layoutedNodes} edges={edges} />
+<SysMLDiagram nodes={layoutedNodes} edges={layoutedEdges} />
 ```
 
 ### Example 4: Sequence Diagram
@@ -332,9 +332,13 @@ const messages = [
 ];
 
 // Custom sequence layout arranges lifelines horizontally
-const layoutedNodes = await applyRecommendedLayout(lifelines, messages, 'sequence');
+const { nodes: layoutedNodes, edges: layoutedEdges } = await applyRecommendedLayout(
+  lifelines,
+  messages,
+  'sequence'
+);
 
-<SysMLDiagram nodes={layoutedNodes} edges={messages} />
+<SysMLDiagram nodes={layoutedNodes} edges={layoutedEdges} />
 ```
 
 ## React Component Integration
@@ -347,20 +351,22 @@ import { applyLayout } from 'sysml-reactflow';
 
 function MyDiagram() {
   const [nodes, setNodes] = useState<SysMLReactFlowNode[]>([]);
-  const [edges] = useState<SysMLReactFlowEdge[]>(...);
+  const [edges, setEdges] = useState<SysMLReactFlowEdge[]>(...);
 
   useEffect(() => {
     async function layoutDiagram() {
       const initialNodes = createNodesFromSpecs(...);
-      const layoutedNodes = await applyLayout(initialNodes, edges, {
+      const initialEdges = createEdgesFromRelationships(...);
+      const { nodes: layoutedNodes, edges: layoutedEdges } = await applyLayout(initialNodes, initialEdges, {
         algorithm: 'layered',
         direction: 'DOWN'
       });
       setNodes(layoutedNodes);
+      setEdges(layoutedEdges);
     }
 
     layoutDiagram();
-  }, [edges]);
+  }, []);
 
   return <SysMLDiagram nodes={nodes} edges={edges} />;
 }
@@ -378,7 +384,7 @@ function MyDiagram() {
 You can mix automatic layout with manual positioning:
 
 ```typescript
-const layoutedNodes = await applyLayout(nodes, edges);
+const { nodes: layoutedNodes, edges: layoutedEdges } = await applyLayout(nodes, edges);
 
 // Override specific node positions after layout
 const finalNodes = layoutedNodes.map(node => {
@@ -402,9 +408,9 @@ const model = { nodes: specs, relationships };
 const view = realizeViewpoint(model, structuralDefinitionViewpoint);
 
 // Apply layout to materialized view
-const layoutedNodes = await applyLayout(view.nodes, view.relationships);
+const { nodes: layoutedNodes, edges: layoutedEdges } = await applyLayout(view.nodes, view.relationships);
 
-<SysMLDiagram nodes={layoutedNodes} edges={view.relationships} />
+<SysMLDiagram nodes={layoutedNodes} edges={layoutedEdges} />
 ```
 
 ## Troubleshooting

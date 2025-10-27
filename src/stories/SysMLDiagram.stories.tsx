@@ -64,9 +64,13 @@ const AutoLayoutStory = ({
     async function layout() {
       const initialNodes = createNodesFromSpecs(specs);
       const initialEdges = createEdgesFromRelationships(relationships);
-      const layoutedNodes = await applyRecommendedLayout(initialNodes, initialEdges, diagramType);
+      const { nodes: layoutedNodes, edges: layoutedEdges } = await applyRecommendedLayout(
+        initialNodes,
+        initialEdges,
+        diagramType
+      );
       setNodes(layoutedNodes);
-      setEdges(initialEdges);
+      setEdges(layoutedEdges);
     }
     layout();
   }, [specs, relationships, diagramType]);
@@ -302,9 +306,13 @@ const StateMachineStory = ({ background = 'light' }: { background?: 'light' | 'd
         createStateTransitionEdge({ id: 't8', source: 'fault', target: 'standby', trigger: 'faultCleared', effect: 'resetSystem()' })
       ];
 
-      const layoutedNodes = await applyRecommendedLayout(stateNodes, transitions, 'stateMachine');
+      const { nodes: layoutedNodes, edges: layoutedEdges } = await applyRecommendedLayout(
+        stateNodes,
+        transitions,
+        'stateMachine'
+      );
       setNodes(layoutedNodes);
-      setEdges(transitions);
+      setEdges(layoutedEdges);
     }
     layout();
   }, []);
@@ -454,9 +462,13 @@ const SequenceDiagramStory = ({ background = 'light' }: { background?: 'light' |
         createSequenceMessageEdge({ id: 'm6', type: 'async', source: 'controller', target: 'driver', label: 'displayReadyStatus()' })
       ];
 
-      const layoutedNodes = await applyRecommendedLayout(lifelines, messages, 'sequence');
+      const { nodes: layoutedNodes, edges: layoutedEdges } = await applyRecommendedLayout(
+        lifelines,
+        messages,
+        'sequence'
+      );
       setNodes(layoutedNodes);
-      setEdges(messages);
+      setEdges(layoutedEdges);
     }
     layout();
   }, []);

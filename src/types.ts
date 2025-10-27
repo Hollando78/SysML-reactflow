@@ -776,6 +776,18 @@ export type SysMLNodeSpec =
 export type SysMLReactFlowNode = Node<SysMLNodeData>;
 export type SysMLReactFlowEdge = Edge<SysMLEdgeData>;
 
+export interface SysMLRoutePoint {
+  x: number;
+  y: number;
+}
+
+export type SysMLEdgeRouting = 'orthogonal' | 'spline';
+
+export interface SysMLEdgeRoute {
+  points: SysMLRoutePoint[];
+  routing: SysMLEdgeRouting;
+}
+
 export interface SysMLEdgeData {
   kind: SysMLEdgeKind;
   label?: string;
@@ -783,4 +795,5 @@ export interface SysMLEdgeData {
   trigger?: string;
   guard?: string;
   effect?: string;
+  route?: SysMLEdgeRoute;
 }

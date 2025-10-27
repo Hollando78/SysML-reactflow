@@ -1,6 +1,12 @@
 import ELK, { type ElkNode, type ElkExtendedEdge } from 'elkjs/lib/elk.bundled.js';
 import type { Node, Edge } from 'reactflow';
-import type { SysMLNodeData, SysMLEdgeData } from './types';
+import type {
+  SysMLNodeData,
+  SysMLEdgeData,
+  SysMLEdgeRoute,
+  SysMLEdgeRouting,
+  SysMLRoutePoint
+} from './types';
 
 /**
  * Layout algorithm types supported for SysML diagrams
@@ -90,25 +96,32 @@ const elk = new ELK();
  * const edges = createEdgesFromRelationships([...]);
  *
  * // Apply layered layout (good for requirements, BDD)
- * const layoutedNodes = await applyLayout(nodes, edges, {
+ * const { nodes: layoutedNodes, edges: layoutedEdges } = await applyLayout(nodes, edges, {
  *   algorithm: 'layered',
  *   direction: 'DOWN'
  * });
  *
- * <SysMLDiagram nodes={layoutedNodes} edges={edges} />
+ * <SysMLDiagram nodes={layoutedNodes} edges={layoutedEdges} />
  * ```
  */
+export interface LayoutResult {
+  nodes: Node<SysMLNodeData>[];
+  edges: Edge<SysMLEdgeData>[];
+}
+
 export async function applyLayout(
   nodes: Node<SysMLNodeData>[],
   edges: Edge<SysMLEdgeData>[],
   options: LayoutOptions = {}
-): Promise<Node<SysMLNodeData>[]> {
+): Promise<LayoutResult> {
   const opts = { ...defaultOptions, ...options };
 
   // Special case: sequence diagram layout
   if (opts.algorithm === 'sequence') {
-    return applySequenceLayout(nodes, opts);
+    return applySequenceLayout(nodes, edges, opts);
   }
+
+  const edgeRoutingModes = new Map<string, SysMLEdgeRouting>();
 
   // Convert React Flow graph to ELK format
   const elkGraph: ElkNode = {
@@ -119,18 +132,28 @@ export async function applyLayout(
       width: opts.nodeWidth,
       height: opts.nodeHeight
     })),
-    edges: edges.map((edge) => ({
-      id: edge.id,
-      sources: [edge.source],
-      targets: [edge.target]
-    }))
+    edges: edges.map((edge) => {
+      const routing = getRoutingModeForEdge(edge);
+      edgeRoutingModes.set(edge.id, routing);
+      return {
+        id: edge.id,
+        sources: [edge.source],
+        targets: [edge.target],
+        layoutOptions: {
+          'elk.edgeRouting': routing === 'spline' ? 'SPLINE' : 'ORTHOGONAL',
+          'elk.layered.edgeRouting': routing === 'spline' ? 'SPLINE' : 'ORTHOGONAL'
+        }
+      } satisfies ElkExtendedEdge;
+    })
   };
 
   // Run ELK layout
   const layoutedGraph = await elk.layout(elkGraph);
 
+  const routedEdges = extractEdgeRoutes(layoutedGraph, edgeRoutingModes);
+
   // Apply positions back to React Flow nodes
-  return nodes.map((node) => {
+  const layoutedNodes = nodes.map((node) => {
     const elkNode = layoutedGraph.children?.find((n) => n.id === node.id);
     if (elkNode?.x !== undefined && elkNode?.y !== undefined) {
       return {
@@ -140,6 +163,22 @@ export async function applyLayout(
     }
     return node;
   });
+
+  const layoutedEdges = edges.map((edge) => {
+    const route = routedEdges.get(edge.id);
+    if (route && edge.data) {
+      return {
+        ...edge,
+        data: {
+          ...edge.data,
+          route
+        }
+      };
+    }
+    return edge;
+  });
+
+  return { nodes: layoutedNodes, edges: layoutedEdges };
 }
 
 /**
@@ -200,8 +239,9 @@ function getElkOptions(opts: Required<LayoutOptions>): Record<string, string> {
  */
 function applySequenceLayout(
   nodes: Node<SysMLNodeData>[],
+  edges: Edge<SysMLEdgeData>[],
   opts: Required<LayoutOptions>
-): Promise<Node<SysMLNodeData>[]> {
+): Promise<LayoutResult> {
   // Separate lifelines from other nodes
   const lifelines = nodes.filter((n) => n.data.kind === 'sequence-lifeline');
   const others = nodes.filter((n) => n.data.kind !== 'sequence-lifeline');
@@ -226,7 +266,81 @@ function applySequenceLayout(
     return node;
   });
 
-  return Promise.resolve([...layoutedLifelines, ...layoutedOthers]);
+  return Promise.resolve({
+    nodes: [...layoutedLifelines, ...layoutedOthers],
+    edges
+  });
+}
+
+const structuralEdgeKinds = new Set<string>([
+  'composition',
+  'aggregation',
+  'association',
+  'specialization',
+  'conjugation',
+  'feature-typing',
+  'feature-membership',
+  'owning-membership',
+  'variant-membership',
+  'type-featuring',
+  'feature-chaining',
+  'binding-connector'
+]);
+
+function getRoutingModeForEdge(edge: Edge<SysMLEdgeData>): SysMLEdgeRouting {
+  const kind = edge.data?.kind;
+  if (!kind) {
+    return 'spline';
+  }
+  return structuralEdgeKinds.has(kind) ? 'orthogonal' : 'spline';
+}
+
+function extractEdgeRoutes(
+  graph: ElkNode,
+  routingModes: Map<string, SysMLEdgeRouting>
+): Map<string, SysMLEdgeRoute> {
+  const routes = new Map<string, SysMLEdgeRoute>();
+  const elkEdges = collectEdges(graph);
+
+  elkEdges.forEach((edge) => {
+    const sections = edge.sections ?? [];
+    if (sections.length === 0) {
+      return;
+    }
+
+    const points: SysMLRoutePoint[] = [];
+
+    sections.forEach((section) => {
+      pushPoint(points, section.startPoint);
+      section.bendPoints?.forEach((bend) => pushPoint(points, bend));
+      pushPoint(points, section.endPoint);
+    });
+
+    if (points.length >= 2) {
+      const routing = routingModes.get(edge.id) ?? 'spline';
+      routes.set(edge.id, { points, routing });
+    }
+  });
+
+  return routes;
+}
+
+function collectEdges(node: ElkNode): ElkExtendedEdge[] {
+  const edges: ElkExtendedEdge[] = [...((node.edges ?? []) as ElkExtendedEdge[])];
+  node.children?.forEach((child) => {
+    edges.push(...collectEdges(child));
+  });
+  return edges;
+}
+
+function pushPoint(points: SysMLRoutePoint[], point?: { x: number; y: number } | null) {
+  if (!point) {
+    return;
+  }
+  const last = points[points.length - 1];
+  if (!last || last.x !== point.x || last.y !== point.y) {
+    points.push({ x: point.x, y: point.y });
+  }
 }
 
 /**
@@ -344,7 +458,7 @@ export async function applyRecommendedLayout(
   edges: Edge<SysMLEdgeData>[],
   diagramType: keyof typeof recommendedLayouts,
   overrides: LayoutOptions = {}
-): Promise<Node<SysMLNodeData>[]> {
+): Promise<LayoutResult> {
   const recommended = recommendedLayouts[diagramType];
   return applyLayout(nodes, edges, { ...recommended, ...overrides });
 }

@@ -2,7 +2,7 @@ import { memo, useCallback } from 'react';
 import type { EdgeProps, EdgeTypes, Node } from 'reactflow';
 import { BaseEdge, EdgeLabelRenderer, Position, getSmoothStepPath, getStraightPath, useStore } from 'reactflow';
 
-import type { SysMLEdgeData } from './types';
+import type { SysMLEdgeData, SysMLRoutePoint } from './types';
 
 // SysML v2.0 edge colors
 const edgeColors: Record<string, string> = {
@@ -260,51 +260,69 @@ const SysMLEdgeComponent = memo((props: EdgeProps<SysMLEdgeData>) => {
     useCallback((state) => state.nodeInternals.get(target), [target])
   );
 
-  const sourceGeometry = buildGeometry(sourceNode, sourceX, sourceY);
-  const targetGeometry = buildGeometry(targetNode, targetX, targetY);
+  const route = data?.route;
+  let edgePath: string;
+  let labelX: number;
+  let labelY: number;
 
-  const dx = targetGeometry.center.x - sourceGeometry.center.x;
-  const dy = targetGeometry.center.y - sourceGeometry.center.y;
-  const horizontalDominant = Math.abs(dx) >= Math.abs(dy);
+  if (route && route.points.length >= 2) {
+    edgePath = route.routing === 'spline'
+      ? buildSmoothRoutePath(route.points)
+      : buildPolylineRoutePath(route.points);
 
-  const sourceSide = horizontalDominant
-    ? dx >= 0
-      ? Position.Right
-      : Position.Left
-    : dy >= 0
-      ? Position.Bottom
-      : Position.Top;
+    const midpoint = getRouteMidpoint(route.points);
+    labelX = midpoint.x;
+    labelY = midpoint.y;
+  } else {
+    const sourceGeometry = buildGeometry(sourceNode, sourceX, sourceY);
+    const targetGeometry = buildGeometry(targetNode, targetX, targetY);
 
-  const targetSide = horizontalDominant
-    ? dx >= 0
-      ? Position.Left
-      : Position.Right
-    : dy >= 0
-      ? Position.Top
-      : Position.Bottom;
+    const dx = targetGeometry.center.x - sourceGeometry.center.x;
+    const dy = targetGeometry.center.y - sourceGeometry.center.y;
+    const horizontalDominant = Math.abs(dx) >= Math.abs(dy);
 
-  const sourceAnchor = sourceGeometry.anchors[sourceSide] ?? { x: sourceX, y: sourceY };
-  const targetAnchor = targetGeometry.anchors[targetSide] ?? { x: targetX, y: targetY };
+    const sourceSide = horizontalDominant
+      ? dx >= 0
+        ? Position.Right
+        : Position.Left
+      : dy >= 0
+        ? Position.Bottom
+        : Position.Top;
 
-  const pathType = getPathType(data?.kind);
+    const targetSide = horizontalDominant
+      ? dx >= 0
+        ? Position.Left
+        : Position.Right
+      : dy >= 0
+        ? Position.Top
+        : Position.Bottom;
 
-  // Use appropriate path based on relationship type
-  const [edgePath, labelX, labelY] = pathType === 'smooth'
-    ? getSmoothStepPath({
-        sourceX: sourceAnchor.x,
-        sourceY: sourceAnchor.y,
-        targetX: targetAnchor.x,
-        targetY: targetAnchor.y,
-        sourcePosition: sourceSide,
-        targetPosition: targetSide,
-        borderRadius: 8
-      })
-    : getStraightPath({
-        sourceX: sourceAnchor.x,
-        sourceY: sourceAnchor.y,
-        targetX: targetAnchor.x,
-        targetY: targetAnchor.y
-      });
+    const sourceAnchor = sourceGeometry.anchors[sourceSide] ?? { x: sourceX, y: sourceY };
+    const targetAnchor = targetGeometry.anchors[targetSide] ?? { x: targetX, y: targetY };
+
+    const pathType = getPathType(data?.kind);
+
+    const result = pathType === 'smooth'
+      ? getSmoothStepPath({
+          sourceX: sourceAnchor.x,
+          sourceY: sourceAnchor.y,
+          targetX: targetAnchor.x,
+          targetY: targetAnchor.y,
+          sourcePosition: sourceSide,
+          targetPosition: targetSide,
+          borderRadius: 8
+        })
+      : getStraightPath({
+          sourceX: sourceAnchor.x,
+          sourceY: sourceAnchor.y,
+          targetX: targetAnchor.x,
+          targetY: targetAnchor.y
+        });
+
+    edgePath = result[0];
+    labelX = result[1];
+    labelY = result[2];
+  }
 
   const style = getEdgeStyle(data?.kind);
   const markerStart = getMarkerStart(data?.kind);
@@ -371,3 +389,88 @@ export const SysMLEdgeMarkersComponent = SysMLEdgeMarkers;
 export const sysmlEdgeTypes: EdgeTypes = {
   'sysml.relationship': SysMLEdgeComponent
 };
+
+function buildPolylineRoutePath(points: SysMLRoutePoint[]): string {
+  if (points.length === 0) {
+    return '';
+  }
+  const [first, ...rest] = points;
+  const commands = [`M ${first.x},${first.y}`];
+  rest.forEach((point) => {
+    commands.push(`L ${point.x},${point.y}`);
+  });
+  return commands.join(' ');
+}
+
+function buildSmoothRoutePath(points: SysMLRoutePoint[]): string {
+  if (points.length <= 2) {
+    return buildPolylineRoutePath(points);
+  }
+
+  const commands: string[] = [`M ${points[0].x},${points[0].y}`];
+
+  for (let i = 0; i < points.length - 1; i += 1) {
+    const p0 = points[i === 0 ? i : i - 1];
+    const p1 = points[i];
+    const p2 = points[i + 1];
+    const p3 = points[i + 2] ?? p2;
+
+    const cp1 = {
+      x: p1.x + (p2.x - p0.x) / 6,
+      y: p1.y + (p2.y - p0.y) / 6
+    };
+    const cp2 = {
+      x: p2.x - (p3.x - p1.x) / 6,
+      y: p2.y - (p3.y - p1.y) / 6
+    };
+
+    commands.push(`C ${cp1.x},${cp1.y} ${cp2.x},${cp2.y} ${p2.x},${p2.y}`);
+  }
+
+  return commands.join(' ');
+}
+
+function getRouteMidpoint(points: SysMLRoutePoint[]): SysMLRoutePoint {
+  if (points.length === 0) {
+    return { x: 0, y: 0 };
+  }
+  if (points.length === 1) {
+    return points[0];
+  }
+
+  let totalLength = 0;
+  const segmentLengths: number[] = [];
+  for (let i = 0; i < points.length - 1; i += 1) {
+    const length = distance(points[i], points[i + 1]);
+    segmentLengths.push(length);
+    totalLength += length;
+  }
+
+  const halfLength = totalLength / 2;
+  let accumulated = 0;
+
+  for (let i = 0; i < segmentLengths.length; i += 1) {
+    const len = segmentLengths[i];
+    if (accumulated + len >= halfLength) {
+      const remaining = halfLength - accumulated;
+      const ratio = len === 0 ? 0 : remaining / len;
+      return interpolate(points[i], points[i + 1], ratio);
+    }
+    accumulated += len;
+  }
+
+  return points[points.length - 1];
+}
+
+function distance(a: SysMLRoutePoint, b: SysMLRoutePoint): number {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+function interpolate(a: SysMLRoutePoint, b: SysMLRoutePoint, t: number): SysMLRoutePoint {
+  return {
+    x: a.x + (b.x - a.x) * t,
+    y: a.y + (b.y - a.y) * t
+  };
+}

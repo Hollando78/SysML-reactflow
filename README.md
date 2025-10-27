@@ -160,9 +160,9 @@ const nodes = createNodesFromSpecs([...]);
 const edges = createEdgesFromRelationships([...]);
 
 // Apply automatic layout
-const layoutedNodes = await applyRecommendedLayout(nodes, edges, 'requirements');
+const { nodes: layoutedNodes, edges: layoutedEdges } = await applyRecommendedLayout(nodes, edges, 'requirements');
 
-<SysMLDiagram nodes={layoutedNodes} edges={edges} fitView />
+<SysMLDiagram nodes={layoutedNodes} edges={layoutedEdges} fitView />
 ```
 
 The library supports multiple layout algorithms:

@@ -31,9 +31,10 @@ describe('Layout Module', () => {
       const nodes = createNodesFromSpecs(sampleSpecs);
       const edges = createEdgesFromRelationships(sampleRelationships);
 
-      const layoutedNodes = await applyLayout(nodes, edges);
+      const { nodes: layoutedNodes, edges: layoutedEdges } = await applyLayout(nodes, edges);
 
       expect(layoutedNodes).toHaveLength(3);
+      expect(layoutedEdges).toHaveLength(2);
       expect(layoutedNodes[0].position).toBeDefined();
       expect(layoutedNodes[0].position.x).toBeGreaterThanOrEqual(0);
       expect(layoutedNodes[0].position.y).toBeGreaterThanOrEqual(0);
@@ -43,7 +44,7 @@ describe('Layout Module', () => {
       const nodes = createNodesFromSpecs(sampleSpecs);
       const edges = createEdgesFromRelationships(sampleRelationships);
 
-      const layoutedNodes = await applyLayout(nodes, edges, {
+      const { nodes: layoutedNodes, edges: layoutedEdges } = await applyLayout(nodes, edges, {
         algorithm: 'layered',
         direction: 'RIGHT',
         nodeSpacing: 150,
@@ -51,6 +52,7 @@ describe('Layout Module', () => {
       });
 
       expect(layoutedNodes).toHaveLength(3);
+      expect(layoutedEdges).toHaveLength(2);
       // All nodes should have valid positions
       layoutedNodes.forEach(node => {
         expect(node.position.x).toBeDefined();
@@ -64,44 +66,47 @@ describe('Layout Module', () => {
       const nodes = createNodesFromSpecs(sampleSpecs);
       const edges = createEdgesFromRelationships(sampleRelationships);
 
-      const layoutedNodes = await applyLayout(nodes, edges, {
+      const { nodes: layoutedNodes, edges: layoutedEdges } = await applyLayout(nodes, edges, {
         algorithm: 'force'
       });
 
       expect(layoutedNodes).toHaveLength(3);
       expect(layoutedNodes[0].position).toBeDefined();
+      expect(layoutedEdges).toHaveLength(2);
     });
 
     it('should apply mrtree layout', async () => {
       const nodes = createNodesFromSpecs(sampleSpecs);
       const edges = createEdgesFromRelationships(sampleRelationships);
 
-      const layoutedNodes = await applyLayout(nodes, edges, {
+      const { nodes: layoutedNodes, edges: layoutedEdges } = await applyLayout(nodes, edges, {
         algorithm: 'mrtree',
         direction: 'DOWN'
       });
 
       expect(layoutedNodes).toHaveLength(3);
       expect(layoutedNodes[0].position).toBeDefined();
+      expect(layoutedEdges).toHaveLength(2);
     });
 
     it('should apply box layout', async () => {
       const nodes = createNodesFromSpecs(sampleSpecs);
       const edges = createEdgesFromRelationships(sampleRelationships);
 
-      const layoutedNodes = await applyLayout(nodes, edges, {
+      const { nodes: layoutedNodes, edges: layoutedEdges } = await applyLayout(nodes, edges, {
         algorithm: 'box'
       });
 
       expect(layoutedNodes).toHaveLength(3);
       expect(layoutedNodes[0].position).toBeDefined();
+      expect(layoutedEdges).toHaveLength(2);
     });
 
     it('should preserve node IDs and data', async () => {
       const nodes = createNodesFromSpecs(sampleSpecs);
       const edges = createEdgesFromRelationships(sampleRelationships);
 
-      const layoutedNodes = await applyLayout(nodes, edges);
+      const { nodes: layoutedNodes } = await applyLayout(nodes, edges);
 
       expect(layoutedNodes[0].id).toBe('REQ-1');
       expect(layoutedNodes[0].data.name).toBe('Requirement 1');
@@ -113,18 +118,20 @@ describe('Layout Module', () => {
       const nodes: SysMLReactFlowNode[] = [];
       const edges: SysMLReactFlowEdge[] = [];
 
-      const layoutedNodes = await applyLayout(nodes, edges);
+      const { nodes: layoutedNodes, edges: layoutedEdges } = await applyLayout(nodes, edges);
 
       expect(layoutedNodes).toHaveLength(0);
+      expect(layoutedEdges).toHaveLength(0);
     });
 
     it('should handle nodes with no edges', async () => {
       const nodes = createNodesFromSpecs(sampleSpecs);
       const edges: SysMLReactFlowEdge[] = [];
 
-      const layoutedNodes = await applyLayout(nodes, edges);
+      const { nodes: layoutedNodes, edges: layoutedEdges } = await applyLayout(nodes, edges);
 
       expect(layoutedNodes).toHaveLength(3);
+      expect(layoutedEdges).toHaveLength(0);
       layoutedNodes.forEach(node => {
         expect(node.position).toBeDefined();
       });
@@ -142,13 +149,14 @@ describe('Layout Module', () => {
       const nodes = createNodesFromSpecs(lifelineSpecs);
       const edges: SysMLReactFlowEdge[] = [];
 
-      const layoutedNodes = await applyLayout(nodes, edges, {
+      const { nodes: layoutedNodes, edges: layoutedEdges } = await applyLayout(nodes, edges, {
         algorithm: 'sequence',
         nodeSpacing: 280,
         nodeWidth: 200
       });
 
       expect(layoutedNodes).toHaveLength(3);
+      expect(layoutedEdges).toHaveLength(0);
 
       // All lifelines should be at y=0
       layoutedNodes.forEach(node => {
@@ -171,7 +179,7 @@ describe('Layout Module', () => {
       const nodes = createNodesFromSpecs(specs);
       const edges: SysMLReactFlowEdge[] = [];
 
-      const layoutedNodes = await applyLayout(nodes, edges, {
+      const { nodes: layoutedNodes, edges: layoutedEdges } = await applyLayout(nodes, edges, {
         algorithm: 'sequence',
         nodeSpacing: 280,
         nodeWidth: 200,
@@ -180,6 +188,7 @@ describe('Layout Module', () => {
       });
 
       expect(layoutedNodes).toHaveLength(3);
+      expect(layoutedEdges).toHaveLength(0);
 
       const interactionNode = layoutedNodes.find(n => n.id === 'INT');
       const lifelineNodes = layoutedNodes.filter(n => n.id.startsWith('L'));
@@ -199,9 +208,10 @@ describe('Layout Module', () => {
       const nodes = createNodesFromSpecs(sampleSpecs);
       const edges = createEdgesFromRelationships(sampleRelationships);
 
-      const layoutedNodes = await applyRecommendedLayout(nodes, edges, 'requirements');
+      const { nodes: layoutedNodes, edges: layoutedEdges } = await applyRecommendedLayout(nodes, edges, 'requirements');
 
       expect(layoutedNodes).toHaveLength(3);
+      expect(layoutedEdges).toHaveLength(2);
       expect(layoutedNodes[0].position).toBeDefined();
     });
 
@@ -212,11 +222,14 @@ describe('Layout Module', () => {
       ];
 
       const nodes = createNodesFromSpecs(specs);
-      const edges: SysMLReactFlowEdge[] = [];
+      const edges = createEdgesFromRelationships([
+        { id: 'rel', type: 'composition', source: 'P1', target: 'P2' }
+      ]);
 
-      const layoutedNodes = await applyRecommendedLayout(nodes, edges, 'bdd');
+      const { nodes: layoutedNodes, edges: layoutedEdges } = await applyRecommendedLayout(nodes, edges, 'bdd');
 
       expect(layoutedNodes).toHaveLength(2);
+      expect(layoutedEdges).toHaveLength(1);
       expect(layoutedNodes[0].position).toBeDefined();
     });
 
@@ -227,11 +240,15 @@ describe('Layout Module', () => {
       ];
 
       const nodes = createNodesFromSpecs(specs);
-      const edges: SysMLReactFlowEdge[] = [];
+      const edges = createEdgesFromRelationships([
+        { id: 't1', type: 'transition', source: 'S1', target: 'S2' },
+        { id: 't2', type: 'transition', source: 'S2', target: 'S1' }
+      ]);
 
-      const layoutedNodes = await applyRecommendedLayout(nodes, edges, 'stateMachine');
+      const { nodes: layoutedNodes, edges: layoutedEdges } = await applyRecommendedLayout(nodes, edges, 'stateMachine');
 
       expect(layoutedNodes).toHaveLength(2);
+      expect(layoutedEdges).toHaveLength(2);
       expect(layoutedNodes[0].position).toBeDefined();
     });
 
@@ -239,7 +256,7 @@ describe('Layout Module', () => {
       const nodes = createNodesFromSpecs(sampleSpecs);
       const edges = createEdgesFromRelationships(sampleRelationships);
 
-      const layoutedNodes = await applyRecommendedLayout(
+      const { nodes: layoutedNodes, edges: layoutedEdges } = await applyRecommendedLayout(
         nodes,
         edges,
         'requirements',
@@ -250,6 +267,7 @@ describe('Layout Module', () => {
       );
 
       expect(layoutedNodes).toHaveLength(3);
+      expect(layoutedEdges).toHaveLength(2);
       expect(layoutedNodes[0].position).toBeDefined();
     });
   });
@@ -301,7 +319,7 @@ describe('Layout Module', () => {
       const nodes = createNodesFromSpecs(sampleSpecs);
       const edges = createEdgesFromRelationships(sampleRelationships);
 
-      const layoutedNodes = await applyLayout(nodes, edges, {
+      const { nodes: layoutedNodes } = await applyLayout(nodes, edges, {
         algorithm: 'layered',
         direction: 'DOWN'
       });
@@ -313,7 +331,7 @@ describe('Layout Module', () => {
       const nodes = createNodesFromSpecs(sampleSpecs);
       const edges = createEdgesFromRelationships(sampleRelationships);
 
-      const layoutedNodes = await applyLayout(nodes, edges, {
+      const { nodes: layoutedNodes } = await applyLayout(nodes, edges, {
         algorithm: 'layered',
         direction: 'UP'
       });
@@ -325,7 +343,7 @@ describe('Layout Module', () => {
       const nodes = createNodesFromSpecs(sampleSpecs);
       const edges = createEdgesFromRelationships(sampleRelationships);
 
-      const layoutedNodes = await applyLayout(nodes, edges, {
+      const { nodes: layoutedNodes } = await applyLayout(nodes, edges, {
         algorithm: 'layered',
         direction: 'LEFT'
       });
@@ -337,7 +355,7 @@ describe('Layout Module', () => {
       const nodes = createNodesFromSpecs(sampleSpecs);
       const edges = createEdgesFromRelationships(sampleRelationships);
 
-      const layoutedNodes = await applyLayout(nodes, edges, {
+      const { nodes: layoutedNodes } = await applyLayout(nodes, edges, {
         algorithm: 'layered',
         direction: 'RIGHT'
       });
