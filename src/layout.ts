@@ -77,7 +77,7 @@ const defaultOptions: Required<LayoutOptions> = {
   layerSpacing: 100,
   fitView: true,
   nodeWidth: 220,
-  nodeHeight: 180
+  nodeHeight: 150
 };
 
 const elk = new ELK();
@@ -166,7 +166,7 @@ export async function applyLayout(
 
   const layoutedEdges = edges.map((edge) => {
     const route = routedEdges.get(edge.id);
-    if (route && edge.data) {
+    if (route && edge.data && route.routing === 'spline') {
       return {
         ...edge,
         data: {
