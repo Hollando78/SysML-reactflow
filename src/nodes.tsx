@@ -1,6 +1,5 @@
 import { memo, type ReactNode } from 'react';
 import type { NodeProps, NodeTypes } from 'reactflow';
-import { Handle, Position } from 'reactflow';
 
 import type { SysMLCompartment, SysMLNodeData } from './types';
 
@@ -80,16 +79,6 @@ type ChromeProps = {
   data: SysMLNodeData;
   children: ReactNode;
 };
-
-// Standard connection handles for all nodes (top, right, bottom, left)
-const StandardHandles = () => (
-  <>
-    <Handle type="target" position={Position.Top} id="top" style={{ background: '#525252' }} />
-    <Handle type="source" position={Position.Right} id="right" style={{ background: '#525252' }} />
-    <Handle type="target" position={Position.Bottom} id="bottom" style={{ background: '#525252' }} />
-    <Handle type="source" position={Position.Left} id="left" style={{ background: '#525252' }} />
-  </>
-);
 
 const NodeChrome = ({ data, children }: ChromeProps) => {
   const accent = accentByKind[data.kind] ?? '#262626';
@@ -247,7 +236,6 @@ const RequirementNode = memo((props: NodeProps<SysMLNodeData>) => {
       <NodeChrome data={data}>
         <CompartmentList compartments={data.compartments} />
       </NodeChrome>
-      <StandardHandles />
     </>
   );
 });
@@ -259,8 +247,6 @@ const BlockNode = memo((props: NodeProps<SysMLNodeData>) => {
       <NodeChrome data={data}>
         <CompartmentList compartments={data.compartments} />
       </NodeChrome>
-      <StandardHandles />
-      
     </>
   );
 });
@@ -377,8 +363,6 @@ const StateMachineNode = memo((props: NodeProps<SysMLNodeData>) => {
       <NodeChrome data={data}>
         <CompartmentList compartments={data.compartments} />
       </NodeChrome>
-      <StandardHandles />
-      
     </>
   );
 });
@@ -429,10 +413,6 @@ const SequenceLifelineNode = memo((props: NodeProps<SysMLNodeData>) => {
           />
         </div>
       </div>
-      <Handle type="target" position={Position.Top} id="lifeline-target" />
-      <Handle type="source" position={Position.Bottom} id="lifeline-source" />
-      <Handle type="source" position={Position.Right} id="lifeline-message-source" />
-      <Handle type="target" position={Position.Left} id="lifeline-message-target" />
     </>
   );
 });
@@ -467,8 +447,6 @@ const ActivityControlNode = memo((props: NodeProps<SysMLNodeData>) => {
           }}
         />
       )}
-      <StandardHandles />
-      
     </>
   );
 });
