@@ -9,6 +9,8 @@ import {
   type SysMLReactFlowEdge,
   type SysMLReactFlowNode,
   type LayoutPipelineOptions,
+  type SysMLNodeSpec,
+  type SysMLRelationshipSpec,
   behaviorControlViewpoint,
   interactionViewpoint,
   requirementViewpoint,
@@ -16,6 +18,7 @@ import {
   structuralDefinitionViewpoint,
   realizeViewpoint,
   layoutAndRoute,
+  layoutAndRouteFromSpecs,
   recommendedLayouts,
   sysmlViewpoints,
   usageStructureViewpoint
@@ -327,6 +330,27 @@ const viewpointLayoutMap: Record<string, keyof typeof recommendedLayouts> = {
   [requirementViewpoint.id]: 'requirements'
 };
 
+const filterModelForViewpoint = (
+  model: SysMLModel,
+  viewpoint: SysMLViewpoint
+): { nodes: SysMLNodeSpec[]; relationships: SysMLRelationshipSpec[] } => {
+  const filteredNodes = model.nodes.filter(
+    (spec) =>
+      viewpoint.includeNodeKinds.includes(spec.kind) &&
+      (viewpoint.nodeFilter ? viewpoint.nodeFilter(spec) : true)
+  );
+
+  const allowedNodeIds = new Set(filteredNodes.map((spec) => spec.spec.id));
+
+  const filteredRelationships = model.relationships.filter((relationship) => {
+    const kindIncluded = viewpoint.includeEdgeKinds ? viewpoint.includeEdgeKinds.includes(relationship.type) : true;
+    const passesFilter = viewpoint.relationshipFilter ? viewpoint.relationshipFilter(relationship) : true;
+    return kindIncluded && passesFilter && allowedNodeIds.has(relationship.source) && allowedNodeIds.has(relationship.target);
+  });
+
+  return { nodes: filteredNodes, relationships: filteredRelationships };
+};
+
 const meta = {
   title: 'Viewpoints/SysML Viewpoints',
   component: SysMLDiagram,
@@ -365,18 +389,39 @@ const useViewpointDiagram = (viewpoint: SysMLViewpoint) => {
 
     async function materialize() {
       setDiagram(null);
-      const view = realizeViewpoint(sharedModel, viewpoint);
-      if (!cancelled) {
-        setDiagram({ nodes: view.nodes, edges: view.edges });
+      const filtered = filterModelForViewpoint(sharedModel, viewpoint);
+      const layoutKey = viewpointLayoutMap[viewpoint.id];
+
+      if (layoutKey && filtered.nodes.length > 0) {
+        try {
+          const { nodes: layoutedNodes, edges: layoutedEdges } = await layoutAndRouteFromSpecs(
+            filtered.nodes,
+            filtered.relationships,
+            layoutKey,
+            { measure: true }
+          );
+
+          if (!cancelled) {
+            setDiagram({ nodes: layoutedNodes, edges: layoutedEdges });
+          }
+          return;
+        } catch (error) {
+          if (!cancelled) {
+            // eslint-disable-next-line no-console
+            console.warn(
+              `Failed to apply recommended layout "${layoutKey}" for viewpoint "${viewpoint.name}". Falling back to default positioning.`,
+              error
+            );
+          }
+        }
       }
 
+      // Fallback: materialize the viewpoint and run a generic layout pass
+      const realized = realizeViewpoint(sharedModel, viewpoint);
       try {
-        const layoutKey = viewpointLayoutMap[viewpoint.id];
-        const baseLayout: LayoutPipelineOptions = layoutKey
-          ? { ...recommendedLayouts[layoutKey] }
-          : { algorithm: 'force', nodeSpacing: 80, layerSpacing: 80 };
-        const { nodes: layoutedNodes, edges: layoutedEdges } = await layoutAndRoute(view.nodes, view.edges, {
-          ...baseLayout,
+        const fallbackLayout: LayoutPipelineOptions = { algorithm: 'force', nodeSpacing: 80, layerSpacing: 80 };
+        const { nodes: layoutedNodes, edges: layoutedEdges } = await layoutAndRoute(realized.nodes, realized.edges, {
+          ...fallbackLayout,
           measure: true
         });
 
@@ -386,8 +431,11 @@ const useViewpointDiagram = (viewpoint: SysMLViewpoint) => {
       } catch (error) {
         if (!cancelled) {
           // eslint-disable-next-line no-console
-          console.warn(`Failed to apply layout for viewpoint "${viewpoint.name}". Falling back to default positions.`, error);
-          setDiagram({ nodes: view.nodes, edges: view.edges });
+          console.warn(
+            `Failed to apply fallback layout for viewpoint "${viewpoint.name}". Showing default materialization.`,
+            error
+          );
+          setDiagram({ nodes: realized.nodes, edges: realized.edges });
         }
       }
     }
