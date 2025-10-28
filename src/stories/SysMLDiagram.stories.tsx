@@ -31,13 +31,14 @@ import {
  * - Type-safe TypeScript APIs
  */
 const meta = {
-  title: 'SysML v2.0 Diagrams',
+  title: 'Examples/Diagram Gallery',
   component: SysMLDiagram,
   parameters: {
     layout: 'fullscreen',
     docs: {
       description: {
-        component: 'Interactive SysML v2.0 diagram visualization powered by React Flow with automatic layout capabilities.'
+        component:
+          'Gallery of pre-materialized SysML diagrams generated from explicit nodes/edges to demonstrate layout pipelines and styling.'
       }
     }
   },
