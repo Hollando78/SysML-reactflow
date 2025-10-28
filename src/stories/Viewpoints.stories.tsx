@@ -8,6 +8,7 @@ import {
   type SysMLViewpoint,
   type SysMLReactFlowEdge,
   type SysMLReactFlowNode,
+  type LayoutPipelineOptions,
   behaviorControlViewpoint,
   interactionViewpoint,
   requirementViewpoint,
@@ -366,7 +367,9 @@ const useViewpointDiagram = (viewpoint: SysMLViewpoint) => {
       setDiagram(null);
       const view = realizeViewpoint(sharedModel, viewpoint);
       const layoutKey = viewpointLayoutMap[viewpoint.id];
-      const baseLayout = layoutKey ? { ...recommendedLayouts[layoutKey] } : { algorithm: 'force', nodeSpacing: 80, layerSpacing: 80 };
+      const baseLayout: LayoutPipelineOptions = layoutKey
+        ? { ...recommendedLayouts[layoutKey] }
+        : { algorithm: 'force', nodeSpacing: 80, layerSpacing: 80 };
       const { nodes: layoutedNodes, edges: layoutedEdges } = await layoutAndRoute(view.nodes, view.edges, {
         ...baseLayout,
         measure: true
