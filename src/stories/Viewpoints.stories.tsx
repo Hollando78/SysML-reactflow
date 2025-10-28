@@ -366,17 +366,29 @@ const useViewpointDiagram = (viewpoint: SysMLViewpoint) => {
     async function materialize() {
       setDiagram(null);
       const view = realizeViewpoint(sharedModel, viewpoint);
-      const layoutKey = viewpointLayoutMap[viewpoint.id];
-      const baseLayout: LayoutPipelineOptions = layoutKey
-        ? { ...recommendedLayouts[layoutKey] }
-        : { algorithm: 'force', nodeSpacing: 80, layerSpacing: 80 };
-      const { nodes: layoutedNodes, edges: layoutedEdges } = await layoutAndRoute(view.nodes, view.edges, {
-        ...baseLayout,
-        measure: true
-      });
-
       if (!cancelled) {
-        setDiagram({ nodes: layoutedNodes, edges: layoutedEdges });
+        setDiagram({ nodes: view.nodes, edges: view.edges });
+      }
+
+      try {
+        const layoutKey = viewpointLayoutMap[viewpoint.id];
+        const baseLayout: LayoutPipelineOptions = layoutKey
+          ? { ...recommendedLayouts[layoutKey] }
+          : { algorithm: 'force', nodeSpacing: 80, layerSpacing: 80 };
+        const { nodes: layoutedNodes, edges: layoutedEdges } = await layoutAndRoute(view.nodes, view.edges, {
+          ...baseLayout,
+          measure: true
+        });
+
+        if (!cancelled) {
+          setDiagram({ nodes: layoutedNodes, edges: layoutedEdges });
+        }
+      } catch (error) {
+        if (!cancelled) {
+          // eslint-disable-next-line no-console
+          console.warn(`Failed to apply layout for viewpoint "${viewpoint.name}". Falling back to default positions.`, error);
+          setDiagram({ nodes: view.nodes, edges: view.edges });
+        }
       }
     }
 
