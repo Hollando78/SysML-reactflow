@@ -1,17 +1,21 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { useMemo, useState, type CSSProperties } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { ReactFlowProvider } from 'reactflow';
 
 import {
   SysMLDiagram,
   type SysMLModel,
   type SysMLViewpoint,
-  type ViewMaterializationOptions,
+  type SysMLReactFlowEdge,
+  type SysMLReactFlowNode,
   behaviorControlViewpoint,
   interactionViewpoint,
   requirementViewpoint,
   stateViewpoint,
   structuralDefinitionViewpoint,
+  realizeViewpoint,
+  layoutAndRoute,
+  recommendedLayouts,
   sysmlViewpoints,
   usageStructureViewpoint
 } from '../index';
@@ -313,25 +317,13 @@ const sharedModel: SysMLModel = {
   ]
 };
 
-const sharedPositions: ViewMaterializationOptions['positions'] = {
-  vehicleDef: { x: 80, y: 40 },
-  powertrainDef: { x: 420, y: 40 },
-  batteryDef: { x: 760, y: 40 },
-  vehicleUsage: { x: 80, y: 240 },
-  powertrainUsage: { x: 420, y: 240 },
-  batteryUsage: { x: 760, y: 240 },
-  torqueItem: { x: 1080, y: 40 },
-  startupActionDef: { x: 80, y: 440 },
-  startupActionUsage: { x: 420, y: 440 },
-  forkControl: { x: 760, y: 440 },
-  driverLifeline: { x: 80, y: 640 },
-  controllerLifeline: { x: 420, y: 640 },
-  vehicleStateMachine: { x: 760, y: 640 },
-  stateOff: { x: 760, y: 840 },
-  stateReady: { x: 980, y: 840 },
-  stateActive: { x: 1200, y: 840 },
-  reqSafeShutdownDef: { x: 1080, y: 240 },
-  reqSafeShutdownUsage: { x: 1080, y: 440 }
+const viewpointLayoutMap: Record<string, keyof typeof recommendedLayouts> = {
+  [structuralDefinitionViewpoint.id]: 'bdd',
+  [usageStructureViewpoint.id]: 'ibd',
+  [behaviorControlViewpoint.id]: 'activity',
+  [interactionViewpoint.id]: 'sequence',
+  [stateViewpoint.id]: 'stateMachine',
+  [requirementViewpoint.id]: 'requirements'
 };
 
 const meta = {
@@ -353,31 +345,80 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+const loadingStyle: CSSProperties = {
+  width: '100%',
+  height: '100vh',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  fontFamily: 'Inter, system-ui, sans-serif',
+  color: '#475569',
+  background: '#ffffff'
+};
+
+const useViewpointDiagram = (viewpoint: SysMLViewpoint) => {
+  const [diagram, setDiagram] = useState<{ nodes: SysMLReactFlowNode[]; edges: SysMLReactFlowEdge[] } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function materialize() {
+      setDiagram(null);
+      const view = realizeViewpoint(sharedModel, viewpoint);
+      const layoutKey = viewpointLayoutMap[viewpoint.id];
+      const baseLayout = layoutKey ? { ...recommendedLayouts[layoutKey] } : { algorithm: 'force', nodeSpacing: 80, layerSpacing: 80 };
+      const { nodes: layoutedNodes, edges: layoutedEdges } = await layoutAndRoute(view.nodes, view.edges, {
+        ...baseLayout,
+        measure: true
+      });
+
+      if (!cancelled) {
+        setDiagram({ nodes: layoutedNodes, edges: layoutedEdges });
+      }
+    }
+
+    void materialize();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [viewpoint]);
+
+  return diagram;
+};
+
 interface ViewpointCanvasProps {
   viewpoint: SysMLViewpoint;
 }
 
-const ViewpointCanvas = ({ viewpoint }: ViewpointCanvasProps) => (
-  <ReactFlowProvider>
-    <div
-      style={{
-        width: '100%',
-        height: '100vh',
-        background: '#ffffff'
-      }}
-    >
-      <SysMLDiagram
-        key={viewpoint.id}
-        model={sharedModel}
-        viewpoint={viewpoint}
-        viewOptions={{ positions: sharedPositions }}
-        fitView
-        showMiniMap={false}
-        showControls={false}
-      />
-    </div>
-  </ReactFlowProvider>
-);
+const ViewpointCanvas = ({ viewpoint }: ViewpointCanvasProps) => {
+  const diagram = useViewpointDiagram(viewpoint);
+
+  return (
+    <ReactFlowProvider>
+      <div
+        style={{
+          width: '100%',
+          height: '100vh',
+          background: '#ffffff'
+        }}
+      >
+        {diagram ? (
+          <SysMLDiagram
+            key={viewpoint.id}
+            nodes={diagram.nodes}
+            edges={diagram.edges}
+            fitView
+            showMiniMap={false}
+            showControls={false}
+          />
+        ) : (
+          <div style={loadingStyle}>Preparing {viewpoint.name}…</div>
+        )}
+      </div>
+    </ReactFlowProvider>
+  );
+};
 
 const sideBySideContainerStyle: CSSProperties = {
   display: 'grid',
@@ -416,6 +457,7 @@ const InteractiveViewpointSwitcher = () => {
     () => viewpointList.find((entry) => entry.id === selectedId) ?? structuralDefinitionViewpoint,
     [selectedId]
   );
+  const diagram = useViewpointDiagram(selectedViewpoint);
 
   return (
     <ReactFlowProvider>
@@ -453,15 +495,18 @@ const InteractiveViewpointSwitcher = () => {
           <span style={{ color: '#475569', fontSize: 13 }}>{selectedViewpoint.description}</span>
         </header>
         <div style={{ flex: 1 }}>
-          <SysMLDiagram
-            key={selectedViewpoint.id}
-            model={sharedModel}
-            viewpoint={selectedViewpoint}
-            viewOptions={{ positions: sharedPositions }}
-            fitView
-            showMiniMap={false}
-            showControls={false}
-          />
+          {diagram ? (
+            <SysMLDiagram
+              key={selectedViewpoint.id}
+              nodes={diagram.nodes}
+              edges={diagram.edges}
+              fitView
+              showMiniMap={false}
+              showControls={false}
+            />
+          ) : (
+            <div style={loadingStyle}>Preparing {selectedViewpoint.name}…</div>
+          )}
         </div>
       </div>
     </ReactFlowProvider>
