@@ -15,7 +15,8 @@ import {
   type SysMLNodeSpec,
   type SysMLRelationshipSpec,
   type SysMLReactFlowNode,
-  type SysMLReactFlowEdge
+  type SysMLReactFlowEdge,
+  type LayoutPipelineOptions
 } from '../index';
 
 /**
@@ -1406,8 +1407,61 @@ const rwsContextRelationships: SysMLRelationshipSpec[] = [
   { id: 'ctx-e9', type: 'flow-connection', source: 'rws-system', target: 'actor-infantry', label: 'Fire support, hazard zone' }
 ];
 
+// Custom layout component for Derive diagrams — uses layoutAndRoute directly
+// with per-diagram layout tuning instead of the generic AutoLayoutStory.
+const DeriveLayoutStory = ({
+  specs,
+  relationships,
+  layoutOptions,
+  background = 'light'
+}: {
+  specs: SysMLNodeSpec[];
+  relationships: SysMLRelationshipSpec[];
+  layoutOptions: LayoutPipelineOptions;
+  background?: 'light' | 'dark';
+}) => {
+  const [nodes, setNodes] = useState<SysMLReactFlowNode[]>([]);
+  const [edges, setEdges] = useState<SysMLReactFlowEdge[]>([]);
+
+  useEffect(() => {
+    async function layout() {
+      const createdNodes = createNodesFromSpecs(specs);
+      const createdEdges = createEdgesFromRelationships(relationships);
+      const { nodes: layoutedNodes, edges: layoutedEdges } = await layoutAndRoute(
+        createdNodes,
+        createdEdges,
+        layoutOptions
+      );
+      setNodes(layoutedNodes);
+      setEdges(layoutedEdges);
+    }
+    layout();
+  }, [specs, relationships, layoutOptions]);
+
+  return (
+    <ReactFlowProvider>
+      <div style={{
+        width: '100%',
+        height: '100vh',
+        background: background === 'dark' ? '#0b0c0f' : '#ffffff'
+      }}>
+        <SysMLDiagram nodes={nodes} edges={edges} fitView />
+      </div>
+    </ReactFlowProvider>
+  );
+};
+
+// Context diagram: force-directed keeps the system node central with
+// actors and externals orbiting around it.
+const contextLayout: LayoutPipelineOptions = {
+  measure: true,
+  algorithm: 'force',
+  nodeSpacing: 120,
+  layerSpacing: 120
+};
+
 export const Derive_RWS_Context: Story = {
-  render: () => <AutoLayoutStory specs={rwsContextSpecs} relationships={rwsContextRelationships} diagramType="bdd" background="light" />,
+  render: () => <DeriveLayoutStory specs={rwsContextSpecs} relationships={rwsContextRelationships} layoutOptions={contextLayout} />,
   parameters: {
     docs: {
       description: {
@@ -1457,8 +1511,19 @@ const rwsDecompositionRelationships: SysMLRelationshipSpec[] = [
   { id: 'dec-p3', type: 'dependency', source: 'sub-tda', target: 'sub-pdu', label: '28V drive power' }
 ];
 
+// Decomposition: layered LEFT-to-RIGHT places the top-level system on the
+// left with subsystems fanning out to the right.  Wide node/layer spacing
+// prevents overlapping edge labels on the 21 relationships.
+const decompositionLayout: LayoutPipelineOptions = {
+  measure: true,
+  algorithm: 'layered',
+  direction: 'RIGHT',
+  nodeSpacing: 100,
+  layerSpacing: 160
+};
+
 export const Derive_RWS_Decomposition: Story = {
-  render: () => <AutoLayoutStory specs={rwsDecompositionSpecs} relationships={rwsDecompositionRelationships} diagramType="bdd" background="light" />,
+  render: () => <DeriveLayoutStory specs={rwsDecompositionSpecs} relationships={rwsDecompositionRelationships} layoutOptions={decompositionLayout} />,
   parameters: {
     docs: {
       description: {
@@ -1544,12 +1609,23 @@ const rwsSafetyRelationships: SysMLRelationshipSpec[] = [
   { id: 'saf-e4', type: 'flow-connection', source: 'comp-safety-ctrl', target: 'comp-safe-state-driver', label: 'brake + inhibit command' }
 ];
 
+// Safety interlock: layered LEFT→RIGHT reflects the signal flow from
+// input devices (arming key, E-stop) through the controller to output
+// devices (firing relay, safe state driver).
+const safetyLayout: LayoutPipelineOptions = {
+  measure: true,
+  algorithm: 'layered',
+  direction: 'RIGHT',
+  nodeSpacing: 80,
+  layerSpacing: 180
+};
+
 export const Derive_RWS_SafetyInterlock: Story = {
-  render: () => <AutoLayoutStory specs={rwsSafetySpecs} relationships={rwsSafetyRelationships} diagramType="bdd" background="light" />,
+  render: () => <DeriveLayoutStory specs={rwsSafetySpecs} relationships={rwsSafetyRelationships} layoutOptions={safetyLayout} />,
   parameters: {
     docs: {
       description: {
-        story: 'Safety Interlock System internal block diagram from Derive. Shows Dual-Channel Safety Controller with arming key, E-stop watchdog, hardware firing relay, and safe state output driver. Approved status on the safety controller.'
+        story: 'Safety Interlock System internal block diagram from Derive. Shows Dual-Channel Safety Controller with arming key, E-stop watchdog, hardware firing relay, and safe state output driver.'
       }
     }
   }
