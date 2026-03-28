@@ -154,7 +154,7 @@ const NodeChrome = ({ data, children }: ChromeProps) => {
         )}
       </div>
       <div style={{ padding: '10px 12px' }}>
-        <div style={{ fontSize: 18, fontWeight: 600 }}>{data.name}</div>
+        <div style={{ fontSize: 18, fontWeight: 600, wordBreak: 'break-word', lineHeight: 1.2 }}>{data.name}</div>
         {data.documentation && (
           <p style={{ fontSize: 12, opacity: 0.8, marginTop: 4 }}>{data.documentation}</p>
         )}
@@ -353,7 +353,7 @@ const UseCaseNode = memo((props: NodeProps<SysMLNodeData>) => {
           {data.stereotype ?? 'use case'}
           {'>>'}
         </div>
-        <div style={{ fontSize: 18, fontWeight: 600 }}>{data.name}</div>
+        <div style={{ fontSize: 18, fontWeight: 600, wordBreak: 'break-word', lineHeight: 1.2 }}>{data.name}</div>
         {data.documentation && (
           <div style={{ fontSize: 12, marginTop: 8, opacity: 0.75 }}>{data.documentation}</div>
         )}

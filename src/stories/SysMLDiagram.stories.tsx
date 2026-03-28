@@ -1422,27 +1422,40 @@ const DeriveLayoutStory = ({
 }) => {
   const [nodes, setNodes] = useState<SysMLReactFlowNode[]>([]);
   const [edges, setEdges] = useState<SysMLReactFlowEdge[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function layout() {
-      const createdNodes = createNodesFromSpecs(specs);
-      const createdEdges = createEdgesFromRelationships(relationships);
-      const { nodes: layoutedNodes, edges: layoutedEdges } = await layoutAndRoute(
-        createdNodes,
-        createdEdges,
-        layoutOptions
-      );
-      setNodes(layoutedNodes);
-      setEdges(layoutedEdges);
+      try {
+        const createdNodes = createNodesFromSpecs(specs);
+        const createdEdges = createEdgesFromRelationships(relationships);
+        const { nodes: layoutedNodes, edges: layoutedEdges } = await layoutAndRoute(
+          createdNodes,
+          createdEdges,
+          layoutOptions
+        );
+        setNodes(layoutedNodes);
+        setEdges(layoutedEdges);
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error('Layout failed:', err);
+        setError(String(err));
+        setNodes(createNodesFromSpecs(specs));
+        setEdges(createEdgesFromRelationships(relationships));
+      }
     }
     layout();
   }, [specs, relationships, layoutOptions]);
+
+  if (error) {
+    return <div style={{ padding: 24, color: '#fa4d56', fontFamily: 'monospace' }}>Layout error: {error}</div>;
+  }
 
   return (
     <ReactFlowProvider>
       <div style={{
         width: '100%',
-        height: '100vh',
+        height: 'calc(100vh - 32px)',
         background: background === 'dark' ? '#0b0c0f' : '#ffffff'
       }}>
         <SysMLDiagram nodes={nodes} edges={edges} fitView />
@@ -1451,12 +1464,14 @@ const DeriveLayoutStory = ({
   );
 };
 
-// Context diagram: force-directed keeps the system node central with
-// actors and externals orbiting around it.
+// Context diagram: layered LEFT→RIGHT places actors on the left, the
+// system in the centre, and external systems on the right — matching
+// the canonical context-diagram convention.
 const contextLayout: LayoutPipelineOptions = {
   measure: true,
-  algorithm: 'force',
-  nodeSpacing: 120,
+  algorithm: 'layered',
+  direction: 'RIGHT',
+  nodeSpacing: 60,
   layerSpacing: 120
 };
 
@@ -1511,15 +1526,15 @@ const rwsDecompositionRelationships: SysMLRelationshipSpec[] = [
   { id: 'dec-p3', type: 'dependency', source: 'sub-tda', target: 'sub-pdu', label: '28V drive power' }
 ];
 
-// Decomposition: layered LEFT-to-RIGHT places the top-level system on the
-// left with subsystems fanning out to the right.  Wide node/layer spacing
-// prevents overlapping edge labels on the 21 relationships.
+// Decomposition: layered top-down places the system at the top and fans
+// subsystems below.  Moderate spacing keeps labels readable without
+// wasting whitespace.
 const decompositionLayout: LayoutPipelineOptions = {
   measure: true,
   algorithm: 'layered',
-  direction: 'RIGHT',
-  nodeSpacing: 100,
-  layerSpacing: 160
+  direction: 'DOWN',
+  nodeSpacing: 50,
+  layerSpacing: 100
 };
 
 export const Derive_RWS_Decomposition: Story = {
@@ -1616,8 +1631,8 @@ const safetyLayout: LayoutPipelineOptions = {
   measure: true,
   algorithm: 'layered',
   direction: 'RIGHT',
-  nodeSpacing: 80,
-  layerSpacing: 180
+  nodeSpacing: 60,
+  layerSpacing: 100
 };
 
 export const Derive_RWS_SafetyInterlock: Story = {

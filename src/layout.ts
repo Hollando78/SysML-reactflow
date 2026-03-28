@@ -198,7 +198,7 @@ export async function applyLayout(
 
   const layoutedEdges = edges.map((edge) => {
     const route = routedEdges.get(edge.id);
-    if (route && edge.data && route.routing === 'spline') {
+    if (route && edge.data && route.points.length >= 2) {
       return {
         ...edge,
         data: {
@@ -232,15 +232,19 @@ function getElkOptions(opts: Required<LayoutOptions>): Record<string, string> {
         'elk.direction': opts.direction,
         'elk.layered.nodePlacement.strategy': 'NETWORK_SIMPLEX',
         'elk.layered.crossingMinimization.strategy': 'LAYER_SWEEP',
-        'elk.layered.cycleBreaking.strategy': 'GREEDY'
+        'elk.layered.cycleBreaking.strategy': 'GREEDY',
+        'elk.layered.considerModelOrder.strategy': 'NODES_AND_EDGES',
+        'elk.layered.spacing.edgeEdgeBetweenLayers': String(opts.nodeSpacing / 3),
+        'elk.layered.spacing.edgeNodeBetweenLayers': String(opts.nodeSpacing / 2)
       };
 
     case 'force':
       return {
         ...baseOptions,
         'elk.algorithm': 'force',
-        'elk.force.repulsion': '200.0',
-        'elk.force.attraction': '0.1',
+        'elk.force.repulsion': '300.0',
+        'elk.force.attraction': '0.08',
+        'elk.force.iterations': '200',
         'elk.force.randomSeed': '42'
       };
 
