@@ -105,9 +105,10 @@ export type SysMLEdgeKind =
   | 'feature-chaining'
   | 'feature-inverting'
   | 'feature-value'
-  // Composition
+  // Structural
   | 'composition'
-  | 'aggregation';
+  | 'aggregation'
+  | 'association';
 
 export interface SysMLTag {
   key: string;

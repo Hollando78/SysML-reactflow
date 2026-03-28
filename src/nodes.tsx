@@ -327,7 +327,7 @@ const DefinitionNode = memo((props: NodeProps<SysMLNodeData>) => {
 
 const UseCaseNode = memo((props: NodeProps<SysMLNodeData>) => {
   const { data } = props;
-  const accent = accentByKind['use-case'];
+  const accent = accentByKind[data.kind] ?? accentByKind['use-case-definition'];
   return (
     <>
       <div
