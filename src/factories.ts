@@ -1326,6 +1326,18 @@ export const createNodesFromSpecs = (
         return createCommentNode(descriptor.spec, position);
       case 'documentation':
         return createDocumentationNode(descriptor.spec, position);
+      default: {
+        // Exhaustive check: if this line is reached, a new kind was added to SysMLNodeSpec
+        // but not handled here. Fall back to a generic definition node.
+        const _exhaustive: never = descriptor;
+        const fallbackSpec = (_exhaustive as { spec: { id: string; name: string; stereotype?: string; description?: string } }).spec;
+        return {
+          id: fallbackSpec.id,
+          type: 'sysml.part-definition',
+          position,
+          data: withBaseData(fallbackSpec, 'part-definition')
+        } as SysMLReactFlowNode;
+      }
     }
   });
 

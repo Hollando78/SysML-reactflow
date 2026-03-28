@@ -1,6 +1,6 @@
 export { SysMLDiagram, type SysMLDiagramProps } from './SysMLDiagram';
 export { sysmlNodeTypes } from './nodes';
-export { sysmlEdgeTypes } from './edges';
+export { sysmlEdgeTypes, SysMLEdgeMarkersComponent } from './edges';
 export {
   // Base factories (still used for some v2 elements)
   createActivityControlNode,
@@ -80,6 +80,8 @@ export {
   interactionViewpoint,
   stateViewpoint,
   requirementViewpoint,
+  useCaseViewpoint,
+  verificationViewpoint,
   realizeViewpoint
 } from './viewpoints';
 export type {
@@ -155,7 +157,8 @@ export type {
   SysMLMetadataDefinitionSpec,
   SysMLMetadataUsageSpec,
   SysMLCommentSpec,
-  SysMLDocumentationSpec
+  SysMLDocumentationSpec,
+  SysMLTag
 } from './types';
 export type { SysMLModel, SysMLViewpoint, ViewMaterializationOptions } from './viewpoints';
 export {

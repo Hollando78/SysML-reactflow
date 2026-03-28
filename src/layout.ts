@@ -515,14 +515,14 @@ function projectToEllipse(
     return { x: centerX, y: centerY };
   }
 
-  const length = Math.hypot(dx / rx, dy / ry);
-  if (length === 0) {
+  const normalizedLength = Math.hypot(dx / rx, dy / ry);
+  if (normalizedLength === 0) {
     return { x: centerX, y: centerY };
   }
 
   return {
-    x: centerX + (dx / length),
-    y: centerY + (dy / length)
+    x: centerX + dx / normalizedLength,
+    y: centerY + dy / normalizedLength
   };
 }
 

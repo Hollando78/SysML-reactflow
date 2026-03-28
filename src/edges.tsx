@@ -41,7 +41,20 @@ const edgeColors: Record<string, string> = {
   // Feature relationships
   featuring: '#6fdc8c',
   'feature-membership': '#08bdba',
-  'owned-featuring': '#4589ff'
+  'owned-featuring': '#4589ff',
+  // Connector relationships
+  'binding-connector': '#a8a8a8',
+  'connector-as-usage': '#c6c6c6',
+  // Definition/Usage relationships
+  definition: '#78a9ff',
+  'owning-membership': '#6929c4',
+  'variant-membership': '#8a3ffc',
+  // Additional feature relationships
+  'feature-chaining': '#009d9a',
+  'feature-inverting': '#d02670',
+  'feature-value': '#ba4e00',
+  // Additional flow relationships
+  'succession-as-usage': '#42be65'
 };
 
 // Edge styles for different SysML relationship types
@@ -49,7 +62,10 @@ const getEdgeStyle = (kind?: string) => {
   const color = kind ? edgeColors[kind] ?? '#8d8d8d' : '#8d8d8d';
 
   // Dashed lines for certain relationship types
-  const dashedRelationships = ['dependency', 'satisfy', 'verify', 'refine', 'allocate', 'include', 'extend'];
+  const dashedRelationships = [
+    'dependency', 'satisfy', 'verify', 'refine', 'allocate', 'include', 'extend',
+    'definition', 'feature-typing', 'owning-membership', 'feature-membership', 'variant-membership'
+  ];
   const strokeDasharray = kind && dashedRelationships.includes(kind) ? '5,5' : undefined;
 
   return {
@@ -185,6 +201,9 @@ const getMarkerEnd = (kind?: string): string | undefined => {
     case 'aggregation':
       // Diamonds are at the start (source), not end
       return undefined;
+    case 'binding-connector':
+      // No arrowhead for binding connectors (equal connection)
+      return undefined;
     case 'feature-typing':
     case 'subsetting':
     case 'redefinition':
@@ -207,7 +226,7 @@ const getMarkerEnd = (kind?: string): string | undefined => {
 // Get appropriate path style for relationship type
 const getPathType = (kind?: string): 'smooth' | 'straight' => {
   // Use smooth step for structured relationships
-  const smoothRelationships = ['composition', 'aggregation', 'association', 'flow-connection', 'connection', 'featuring'];
+  const smoothRelationships = ['composition', 'aggregation', 'association', 'flow-connection', 'connection', 'featuring', 'binding-connector', 'connector-as-usage'];
   return kind && smoothRelationships.includes(kind) ? 'smooth' : 'straight';
 };
 

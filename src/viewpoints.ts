@@ -92,24 +92,48 @@ export const interactionViewpoint: SysMLViewpoint = {
   id: 'sysml.interaction',
   name: 'Interaction Viewpoint',
   description: 'Sequence lifelines and messages for interaction scenarios.',
-  includeNodeKinds: ['sequence-lifeline'],
-  includeEdgeKinds: ['message']
+  includeNodeKinds: ['sequence-lifeline', 'interaction'],
+  includeEdgeKinds: ['message', 'succession']
 };
 
 export const stateViewpoint: SysMLViewpoint = {
   id: 'sysml.state',
   name: 'State Viewpoint',
   description: 'State machines, states, and transitions as described in SysML v2 Module 5.',
-  includeNodeKinds: ['state-machine', 'state'],
-  includeEdgeKinds: ['transition']
+  includeNodeKinds: ['state-machine', 'state', 'state-definition', 'state-usage', 'transition-usage', 'exhibit-state'],
+  includeEdgeKinds: ['transition', 'succession', 'succession-as-usage']
 };
 
 export const requirementViewpoint: SysMLViewpoint = {
   id: 'sysml.requirement',
   name: 'Requirement Viewpoint',
   description: 'Requirement definitions and usages with satisfy/refine/verify relationships.',
-  includeNodeKinds: ['requirement-definition', 'requirement-usage'],
-  includeEdgeKinds: ['satisfy', 'refine', 'verify', 'dependency']
+  includeNodeKinds: [
+    'requirement-definition', 'requirement-usage',
+    'constraint-definition', 'constraint-usage',
+    'concern-definition', 'concern-usage'
+  ],
+  includeEdgeKinds: ['satisfy', 'refine', 'verify', 'dependency', 'composition', 'specialization']
+};
+
+export const useCaseViewpoint: SysMLViewpoint = {
+  id: 'sysml.useCase',
+  name: 'Use Case Viewpoint',
+  description: 'Use case definitions and usages with include/extend relationships.',
+  includeNodeKinds: ['use-case-definition', 'use-case-usage', 'part-usage'],
+  includeEdgeKinds: ['include', 'extend', 'association', 'dependency']
+};
+
+export const verificationViewpoint: SysMLViewpoint = {
+  id: 'sysml.verification',
+  name: 'Verification Viewpoint',
+  description: 'Verification and analysis cases with their requirement relationships.',
+  includeNodeKinds: [
+    'verification-case-definition', 'verification-case-usage',
+    'analysis-case-definition', 'analysis-case-usage',
+    'requirement-definition', 'requirement-usage'
+  ],
+  includeEdgeKinds: ['verify', 'satisfy', 'refine', 'dependency']
 };
 
 export const sysmlViewpoints = {
@@ -118,5 +142,7 @@ export const sysmlViewpoints = {
   behaviorControlViewpoint,
   interactionViewpoint,
   stateViewpoint,
-  requirementViewpoint
+  requirementViewpoint,
+  useCaseViewpoint,
+  verificationViewpoint
 };
